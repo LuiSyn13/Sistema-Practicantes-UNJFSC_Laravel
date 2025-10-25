@@ -60,4 +60,19 @@ class ArchivoController extends Controller
 
         return back()->with('success', 'Récord académico subido correctamente.');
     }
+
+    public function showPDF($documento)
+    {
+        if (!auth()->check()) {
+            abort(403, 'No autorizado');
+        }
+
+        $path = storage_path('app/public/' . $documento);
+        if (!file_exists($path)) {
+            abort(404, 'Archivo no encontrado');
+        }
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
 }

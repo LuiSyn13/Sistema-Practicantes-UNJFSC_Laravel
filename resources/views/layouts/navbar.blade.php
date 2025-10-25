@@ -12,7 +12,7 @@
             <div class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Principal</div>
-                    @if (Auth::user()->persona->rol_id == 1 || Auth::user()->persona->rol_id == 2 || Auth::user()->persona->rol_id == 3)
+                    @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                         <a href="{{ route('panel') }}" class="nav-link {{ request()->routeIs('panel') ? 'active' : '' }}">
                             <i class="bi bi-house-door"></i>
                             <span>Dashboard</span>
@@ -23,7 +23,7 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Gestión de Usuarios</div>
-                    @if (Auth::user()->persona->rol_id == 1 || Auth::user()->persona->rol_id == 2)
+                    @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                         <!-- Menú desplegable de Usuarios -->
                         <div class="nav-dropdown">
                             <a href="#" class="nav-link nav-dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#collapseUsuarios" aria-expanded="false">
@@ -32,17 +32,21 @@
                                 <i class="bi bi-chevron-down nav-arrow"></i>
                             </a>
                             <div class="collapse nav-submenu" id="collapseUsuarios">
-                                @if (Auth::user()->persona->rol_id == 1)
+                                @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                                     <a href="{{ route('registrar') }}" class="nav-sublink">
                                         <i class="bi bi-person-plus"></i>
                                         <span>Añadir Usuario</span>
                                     </a>
                                     <div class="nav-subheader">Tipos de Usuarios</div>
+                                    
+                                @endif
+                                @if (Auth::user()->getRolId() == 1)
                                     <a href="{{ route('docente') }}" class="nav-sublink {{ request()->routeIs('docente.*') ? 'active' : '' }}">
                                         <i class="bi bi-mortarboard"></i>
                                         <span>Docentes</span>
                                     </a>
                                 @endif
+
                                 <a href="{{ route('supervisor') }}" class="nav-sublink {{ request()->routeIs('supervisor.*') ? 'active' : '' }}">
                                     <i class="bi bi-person-badge"></i>
                                     <span>Supervisores</span>
@@ -54,14 +58,8 @@
                             </div>
                         </div>
                     @endif
-                    @if (Auth::user()->persona->rol_id == 3)
-                        <a href="{{ route('estudiante') }}" class="nav-link {{ request()->routeIs('estudiante.*') ? 'active' : '' }}">
-                            <i class="bi bi-people"></i>
-                            <span>Lista de Estudiantes</span>
-                        </a>
-                    @endif
                 </div>
-                @if (Auth::user()->persona->rol_id == 1)
+                @if (Auth::user()->getRolId() == 1)
                     <div class="nav-section">
                         <div class="nav-section-title">Bloque Académico</div>
                         <div class="nav-dropdown">
@@ -88,11 +86,11 @@
                     </div>
                 @endif
 
-                @if (Auth::user()->persona->rol_id == 1 || Auth::user()->persona->rol_id == 2)
+                @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                     <div class="nav-section">
                         <div class="nav-section-title">Asignación</div>
                         <!-- Menú desplegable de Asignaturas -->
-                        @if (Auth::user()->persona->rol_id == 1)
+                        @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                             <div class="nav-dropdown">
                                 <a href="#" class="nav-link nav-dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#collapseAsignaturas" aria-expanded="false">
                                     <i class="bi bi-journal-code"></i>
@@ -110,7 +108,7 @@
                                     </a>
                                 </div>
                             </div>
-                        @elseif (Auth::user()->persona->rol_id == 2)
+                        @elseif (Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                             <a href="{{ route('estudiante_index') }}" class="nav-link {{ request()->routeIs('estudiante_index') ? 'active' : '' }}">
                                     <i class="bi bi-people-fill"></i>
                                     <span>Grupo - Estudiante</span>
@@ -119,7 +117,7 @@
                     </div>
                 @endif
 
-                @if (Auth::user()->persona->rol_id == 1 || Auth::user()->persona->rol_id == 2)
+                @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                     <div class="nav-section">
                         <div class="nav-section-title">Supervisión</div>
                         <div class="nav-dropdown">
@@ -146,7 +144,7 @@
                     </div>
                 @endif
                 
-                @if (Auth::user()->persona->rol_id == 1 || Auth::user()->persona->rol_id == 3)
+                @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 3)
                     <div class="nav-section">
                         <div class="nav-section-title">Evaluación</div>
                         <a href="{{ route('pregunta.index') }}" class="nav-link {{ request()->routeIs('pregunta.*') ? 'active' : '' }}">
@@ -161,7 +159,7 @@
                 @endif
                 <div class="nav-section">
                     <div class="nav-section-title">Otros</div>
-                    @if (Auth::user()->persona->rol_id == 1 || Auth::user()->persona->rol_id == 2 || Auth::user()->persona->rol_id == 3)
+                    @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
                         <a href="{{ route('empresa') }}" class="nav-link {{ request()->routeIs('empresa.*') ? 'active' : '' }}">
                             <i class="bi bi-building"></i>
                             <span>Empresas</span>
@@ -216,7 +214,7 @@
                             </div>
                             <div class="user-details">
                                 <div class="user-name">{{ Auth::user()->persona->nombres ?? 'Usuario' }}</div>
-                                <div class="user-role">{{ Auth::user()->persona->rol->name ?? 'Administrador' }}</div>
+                                <div class="user-role">{{ Auth::user()->getRolName() ?? 'Administrador' }}</div>
                             </div>
                             <i class="bi bi-chevron-down" style="color: var(--text-secondary);"></i>
                         </div>

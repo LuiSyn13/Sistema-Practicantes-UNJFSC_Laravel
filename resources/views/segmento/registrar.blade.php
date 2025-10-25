@@ -497,6 +497,19 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
+                                <label for="semestre">Semestre</label>
+                                <select class="form-control" id="semestreRegistro" name="semestre" required>
+                                    <option value="">Seleccione un semestre</option>
+                                    @foreach($semestres as $semestre)
+                                        <option value="{{ $semestre->id }}">{{ $semestre->codigo }} - {{ $semestre->ciclo }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
                                 <label for="codigo">Código</label>
                                 <input type="tel" class="form-control" id="codigo" name="codigo" maxlength="10" required  oninput="completarCorreo()">
                             </div>
@@ -650,11 +663,11 @@
         const selectedRole = parseInt(rolSelect.value);
         
         // Show/hide based on selected role (2 or 3)
-        if (selectedRole === 2 || selectedRole === 3) {
+        /*if (selectedRole === 2) {
             container.style.display = 'none';
         } else {
             container.style.display = 'block';
-        }
+        }*/
     }
 
     // Initialize on page load

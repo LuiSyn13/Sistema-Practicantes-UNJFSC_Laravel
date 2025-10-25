@@ -604,28 +604,57 @@
               </tr>
             </thead>
             <tbody>
-              @foreach ($estudiantes as $index => $grupo)
+              @foreach ($estudiantes as $index => $asignacion)
                 <tr>
                   <td>
                     <span class="badge badge-light" style="background: var(--background-color); color: var(--text-primary); font-weight: 500;">
-                      {{ $grupo->id }}
+                      {{ $asignacion->id }}
                     </span>
-                  </td> 
-                  <td class="student-name">{{ $grupo->estudiante->nombres ?? 'Sin estudiante' }}</td>
+                  </td>
+                  <td class="student-name">{{ $asignacion->persona->nombres ?? 'Sin estudiante' }} {{ $asignacion->persona->apellidos ?? '' }}</td>
                   <td>
-                    <span class="student-name">{{ $grupo->grupo->semestre->codigo ?? 'Sin semestre' }}</span>
+                    <span class="student-name">{{ $asignacion->semestre->codigo ?? 'Sin semestre' }}</span>
                   </td>
                   <td>
-                    <span class="student-name">{{ $grupo->grupo->escuela->name ?? 'Sin escuela' }}</span>
+                    <span class="student-name">{{ $asignacion->escuela->name ?? 'Sin escuela' }}</span>
                   </td>
                   <td>
-                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalFicha{{ $grupo->id }}">
+                    @php
+                      if(isset($asignacion->persona->matricula->ruta_ficha)) {
+                        $estadoFicha = $asignacion->persona->matricula->estado_ficha ?? 'En proceso';
+                        $bg_ficha = 'warning';
+                        if ($estadoFicha == 'Completo') {
+                            $bg_ficha = 'success';
+                        } elseif ($estadoFicha == 'Corregir') {
+                            $bg_ficha = 'danger';
+                        }
+                      } else {
+                          $bg_ficha = 'secondary';
+                          $bgStateRecord = 'secondary';
+                      }
+                    @endphp
+                    <button type="button" class="btn btn-{{$bg_ficha}}" data-toggle="modal" data-target="#modalFicha{{ $asignacion->id }}">
                       <i class="bi bi-file-earmark-text"></i>
                       Ficha Matrícula
                     </button>
                   </td>
                   <td>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalRecord{{ $grupo->id }}">
+                    @php
+                      if(isset($asignacion->persona->matricula->ruta_record)) {
+                        $estadoRecord = $asignacion->persona->matricula->estado_record ?? 'En proceso';
+                        $bg_record = 'warning';
+                        if ($estadoRecord == 'Completo') {
+                            $bg_record = 'primary';
+                        } elseif ($estadoRecord == 'Observado') {
+                            $bg_record = 'danger';
+                        }
+                      } else {
+                          $bg_record = 'secondary';
+                          $bgStateRecord = 'secondary';
+                      }
+                    @endphp
+
+                    <button type="button" class="btn btn-{{$bg_record}}" data-toggle="modal" data-target="#modalRecord{{ $asignacion->id }}">
                       <i class="bi bi-journal-text"></i>
                       Récord Académico
                     </button>
@@ -633,11 +662,11 @@
                 </tr>
 
 <!-- Modal Ficha de Matrícula -->
-<div class="modal fade" id="modalFicha{{ $grupo->id }}" tabindex="-1" aria-labelledby="modalFichaLabel{{ $grupo->id }}" aria-hidden="true">
+<div class="modal fade" id="modalFicha{{ $asignacion->id }}" tabindex="-1" aria-labelledby="modalFichaLabel{{ $asignacion->id }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="modalFichaLabel{{ $grupo->id }}">
+      <div class="modal-header btn-{{$bg_ficha}} text-white">
+        <h5 class="modal-title" id="modalFichaLabel{{ $asignacion->id }}">
           <i class="bi bi-file-earmark-check"></i>
           Ficha de Matrícula
         </h5>
@@ -647,14 +676,14 @@
       </div>
 
       <div class="modal-body">
-        @if(($grupo->estudiante->matricula->estado_ficha ?? '') == 'Completo')
+        @if(($asignacion->persona->matricula->estado_ficha ?? '') == 'Completo')
             <div class="alert alert-success d-flex justify-content-between align-items-center">
               <div>
                 <i class="bi bi-check-circle-fill me-2"></i>
                 <strong>Estado:</strong> Completo
               </div>
-              @if(isset($grupo->estudiante->matricula->ruta_ficha))
-                  <a href="{{ asset($grupo->estudiante->matricula->ruta_ficha) }}" class="btn btn-outline-success" target="_blank">
+              @if(isset($asignacion->persona->matricula->ruta_ficha))
+                  <a href="{{ asset($asignacion->persona->matricula->ruta_ficha) }}" class="btn btn-outline-success" target="_blank">
                     <i class="bi bi-file-earmark-pdf"></i>
                     Ver PDF
                   </a>
@@ -666,33 +695,33 @@
               @endif
             </div>
         @else
-            @if(isset($grupo->estudiante->matricula->ruta_ficha))
-            <form action="{{ route('actualizar.estado.ficha', $grupo->estudiante->matricula->id ?? 0) }}" method="POST">
+            @if(isset($asignacion->persona->matricula->ruta_ficha))
+            <form action="{{ route('actualizar.estado.ficha', $asignacion->persona->matricula->id ?? 0) }}" method="POST">
                 @csrf
                 <div class="form-group">
-                  <label for="estadoFicha{{ $grupo->id }}" class="font-weight-bold">
+                  <label for="estadoFicha{{ $asignacion->id }}" class="font-weight-bold">
                     <i class="bi bi-gear"></i>
                     Estado del Documento
                   </label>
-                  <select name="estado_ficha" id="estadoFicha{{ $grupo->id }}" class="form-control">
-                      <option value="En proceso" {{ ($grupo->estudiante->matricula->estado_ficha ?? '') == 'En proceso' ? 'selected' : '' }}>
+                  <select name="estado_ficha" id="estadoFicha{{ $asignacion->id }}" class="form-control">
+                      <option value="En proceso" {{ ($asignacion->persona->matricula->estado_ficha ?? '') == 'En proceso' ? 'selected' : '' }}>
                         <i class="bi bi-clock"></i> En proceso
                       </option>
-                      <option value="Corregir" {{ ($grupo->estudiante->matricula->estado_ficha ?? '') == 'Corregir' ? 'selected' : '' }}>
+                      <option value="Corregir" {{ ($asignacion->persona->matricula->estado_ficha ?? '') == 'Corregir' ? 'selected' : '' }}>
                         <i class="bi bi-exclamation-triangle"></i> Corregir
                       </option>
-                      <option value="Completo" {{ ($grupo->estudiante->matricula->estado_ficha ?? '') == 'Completo' ? 'selected' : '' }}>
+                      <option value="Completo" {{ ($asignacion->persona->matricula->estado_ficha ?? '') == 'Completo' ? 'selected' : '' }}>
                         <i class="bi bi-check-circle"></i> Completo
                       </option>
                   </select>
                 </div>
 
                 <div class="document-actions mt-3">
-                  <a href="{{ asset($grupo->estudiante->matricula->ruta_ficha) }}" class="btn btn-outline-success" target="_blank">
+                  <a href="{{ asset($asignacion->persona->matricula->ruta_ficha) }}" class="btn btn-outline-{{$bg_ficha}}" target="_blank">
                       <i class="bi bi-eye"></i>
                       Ver PDF
                   </a>
-                  <button type="submit" class="btn btn-success">
+                  <button type="submit" class="btn btn-{{$bg_ficha}}">
                       <i class="bi bi-save"></i>
                       Guardar cambios
                   </button>
@@ -712,11 +741,11 @@
 </div>
 
 <!-- Modal Récord Académico -->
-<div class="modal fade" id="modalRecord{{ $grupo->id }}" tabindex="-1" aria-labelledby="modalRecordLabel{{ $grupo->id }}" aria-hidden="true">
+<div class="modal fade" id="modalRecord{{ $asignacion->id }}" tabindex="-1" aria-labelledby="modalRecordLabel{{ $asignacion->id }}" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-warning text-white">
-        <h5 class="modal-title" id="modalRecordLabel{{ $grupo->id }}">
+      <div class="modal-header bg-{{$bg_record}} text-white">
+        <h5 class="modal-title" id="modalRecordLabel{{ $asignacion->id }}">
           <i class="bi bi-journal-bookmark"></i>
           Récord Académico
         </h5>
@@ -726,14 +755,14 @@
       </div>
 
       <div class="modal-body">
-        @if(($grupo->estudiante->matricula->estado_record ?? '') == 'Completo')
+        @if(($asignacion->persona->matricula->estado_record ?? '') == 'Completo')
             <div class="alert alert-success d-flex justify-content-between align-items-center">
               <div>
                 <i class="bi bi-check-circle-fill me-2"></i>
                 <strong>Estado:</strong> Completo
               </div>
-              @if(isset($grupo->estudiante->matricula->ruta_record))
-                  <a href="{{ asset($grupo->estudiante->matricula->ruta_record) }}" class="btn btn-outline-warning" target="_blank">
+              @if(isset($asignacion->persona->matricula->ruta_record))
+                  <a href="{{ asset($asignacion->persona->matricula->ruta_record) }}" class="btn btn-outline-warning" target="_blank">
                     <i class="bi bi-file-earmark-pdf"></i>
                     Ver PDF
                   </a>
@@ -745,33 +774,33 @@
               @endif
             </div>
         @else
-            @if(isset($grupo->estudiante->matricula->ruta_record))
-            <form action="{{ route('actualizar.estado.record', $grupo->estudiante->matricula->id ?? 0) }}" method="POST">
+            @if(isset($asignacion->persona->matricula->ruta_record))
+            <form action="{{ route('actualizar.estado.record', $asignacion->persona->matricula->id ?? 0) }}" method="POST">
                 @csrf
                 <div class="form-group">
-                  <label for="estadoRecord{{ $grupo->id }}" class="font-weight-bold">
+                  <label for="estadoRecord{{ $asignacion->id }}" class="font-weight-bold">
                     <i class="bi bi-gear"></i>
                     Estado del Documento
                   </label>
-                  <select name="estado_record" id="estadoRecord{{ $grupo->id }}" class="form-control">
-                      <option value="En proceso" {{ ($grupo->estudiante->matricula->estado_record ?? '') == 'En proceso' ? 'selected' : '' }}>
+                  <select name="estado_record" id="estadoRecord{{ $asignacion->id }}" class="form-control">
+                      <option value="En proceso" {{ ($asignacion->persona->matricula->estado_record ?? '') == 'En proceso' ? 'selected' : '' }}>
                         <i class="bi bi-clock"></i> En proceso
                       </option>
-                      <option value="Observado" {{ ($grupo->estudiante->matricula->estado_record ?? '') == 'Observado' ? 'selected' : '' }}>
+                      <option value="Observado" {{ ($asignacion->persona->matricula->estado_record ?? '') == 'Observado' ? 'selected' : '' }}>
                         <i class="bi bi-exclamation-triangle"></i> Observado
                       </option>
-                      <option value="Completo" {{ ($grupo->estudiante->matricula->estado_record ?? '') == 'Completo' ? 'selected' : '' }}>
+                      <option value="Completo" {{ ($asignacion->persona->matricula->estado_record ?? '') == 'Completo' ? 'selected' : '' }}>
                         <i class="bi bi-check-circle"></i> Completo
                       </option>
                   </select>
                 </div>
 
                 <div class="document-actions mt-3">
-                  <a href="{{ asset($grupo->estudiante->matricula->ruta_record) }}" class="btn btn-outline-warning" target="_blank">
+                  <a href="{{ asset($asignacion->persona->matricula->ruta_record) }}" class="btn btn-outline-{{$bg_record}}" target="_blank">
                       <i class="bi bi-eye"></i>
                       Ver PDF
                   </a>
-                  <button type="submit" class="btn btn-warning">
+                  <button type="submit" class="btn btn-{{$bg_record}}">
                       <i class="bi bi-save"></i>
                       Guardar cambios
                   </button>

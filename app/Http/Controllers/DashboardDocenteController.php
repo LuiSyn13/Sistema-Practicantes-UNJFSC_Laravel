@@ -131,7 +131,7 @@ class DashboardDocenteController extends Controller
 
 
 
-    return view('dashboard.dashvoardDocente', compact(
+    return view('dashboard.dashboardDocente', compact(
         'totalEstudiantes', 'totalFichasValidadas', 'totalSupervisores',
         'estudiantesPorEscuela', 'estadoFichas', 'groupsData', 'fichasPorMes',
         'supervisoresRanking', 'escuelas','chartData','listaEstudiantes', 'facultades'

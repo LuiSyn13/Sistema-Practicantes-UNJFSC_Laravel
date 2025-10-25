@@ -25,7 +25,11 @@
                                                             <span class="text-success ms-2">✓</span>
                                                         </p>
                                                         <div class="d-grid gap-2">
-                                                            <a href="{{ asset($persona?->matricula->ruta_ficha) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                            {{-- Enlace original (público) --}}
+                                                            @php
+                                                                $rutaFichaRel = $persona?->matricula->ruta_ficha ? \Illuminate\Support\Str::after($persona?->matricula->ruta_ficha, 'storage/') : null;
+                                                            @endphp
+                                                            <a href="{{ $rutaFichaRel ? route('documentos.show', ['documento' => $rutaFichaRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                                 <i class="bi bi-eye me-1"></i>Ver PDF
                                                             </a>
                                                         </div>
@@ -37,7 +41,10 @@
                                                             <span class="status-badge status-active">En Progreso</span>
                                                         </p>
                                                         <div class="d-grid gap-2">
-                                                            <a href="{{ asset($persona?->matricula->ruta_ficha) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                            @php
+                                                                $rutaFichaRel = $persona?->matricula->ruta_ficha ? \Illuminate\Support\Str::after($persona?->matricula->ruta_ficha, 'storage/') : null;
+                                                            @endphp
+                                                            <a href="{{ $rutaFichaRel ? route('documentos.show', ['documento' => $rutaFichaRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                                 <i class="bi bi-eye me-1"></i>Ver PDF
                                                             </a>
                                                             <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalFicha">
@@ -76,7 +83,10 @@
                                                             <span class="text-success ms-2">✓</span>
                                                         </p>
                                                         <div class="d-grid gap-2">
-                                                            <a href="{{ asset($persona?->matricula->ruta_record) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                            @php
+                                                                $rutaRecordRel = $persona?->matricula->ruta_record ? \Illuminate\Support\Str::after($persona?->matricula->ruta_record, 'storage/') : null;
+                                                            @endphp
+                                                            <a href="{{ $rutaRecordRel ? route('documentos.show', ['documento' => $rutaRecordRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                                 <i class="bi bi-eye me-1"></i>Ver PDF
                                                             </a>
                                                         </div>
@@ -89,7 +99,10 @@
                                                         <span class="status-badge status-active">En Progreso</span>
                                                     </p>
                                                     <div class="d-grid gap-2">
-                                                        <a href="{{ asset($persona?->matricula->ruta_record) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        @php
+                                                            $rutaRecordRel = $persona?->matricula->ruta_record ? \Illuminate\Support\Str::after($persona?->matricula->ruta_record, 'storage/') : null;
+                                                        @endphp
+                                                        <a href="{{ $rutaRecordRel ? route('documentos.show', ['documento' => $rutaRecordRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                             <i class="bi bi-eye me-1"></i>Ver PDF
                                                         </a>
                                                         <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalRecord">

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreEscuelaRequest;
 use App\Http\Requests\UpdateEscuelaRequest;
-use App\Models\Facultade;
+use App\Models\Facultad;
 use App\Models\Escuela;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -20,7 +20,7 @@ class EscuelaController extends Controller
      */
     public function index(Request $request)
     {
-        $facultades = Facultade::all();
+        $facultades = Facultad::all();
         // Trae todas las escuelas con la relación facultad
         $escuelas = Escuela::with('facultad')->orderBy('id', 'desc')->get();
 
@@ -29,7 +29,7 @@ class EscuelaController extends Controller
 
     public function create()
     {
-        $facultades = Facultade::all();
+        $facultades = Facultad::all();
         return view('escuela.create', compact('facultades'));
     }
 
@@ -64,7 +64,7 @@ class EscuelaController extends Controller
     public function edit($id)
     {
         $escuela = Escuela::findOrFail($id);
-        $facultades = Facultade::all();
+        $facultades = Facultad::all();
 
         return view('escuela.edit', compact('escuela', 'facultades'));
     }

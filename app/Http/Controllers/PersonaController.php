@@ -8,28 +8,36 @@ use App\Models\type_users;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use App\Models\Facultade;
+use App\Models\Facultad;
 use App\Models\Escuela;
+use App\Models\Semestre;
+use App\Models\asignacion_persona;
 
 class PersonaController extends Controller
 {
     public function lista_docentes(){
-        $personas = Persona::where('rol_id', 2)->get();
-        $facultades = Facultade::where('estado', 1)->get();
+        $personas = Persona::whereHas('asignacion_persona', function($query){
+            $query->where('id_rol', 3);
+        })->get();
+        $facultades = Facultad::where('estado', 1)->get();
         $escuelas = Escuela::where('estado', 1)->get();
         return view('list_users.docente', compact('personas', 'facultades', 'escuelas'));
     }
 
     public function lista_supervisores(){
-        $personas = Persona::where('rol_id', 3)->get();
-        $facultades = Facultade::where('estado', 1)->get();
+        $personas = Persona::whereHas('asignacion_persona', function($query){
+            $query->where('id_rol', 4);
+        })->get();
+        $facultades = Facultad::where('estado', 1)->get();
         $escuelas = Escuela::where('estado', 1)->get();
         return view('list_users.supervisor', compact('personas', 'facultades', 'escuelas'));
     }
 
     public function lista_estudiantes(){
-        $personas = Persona::where('rol_id', 4)->get();
-        $facultades = Facultade::where('estado', 1)->get();
+        $personas = Persona::whereHas('asignacion_persona', function($query){
+            $query->where('id_rol', 5);
+        })->get();
+        $facultades = Facultad::where('estado', 1)->get();
         $escuelas = Escuela::where('estado', 1)->get();
         return view('list_users.estudiante', compact('personas', 'facultades', 'escuelas'));
     }
@@ -52,13 +60,21 @@ class PersonaController extends Controller
     public function registro(){
         $user = auth()->user();
         $persona = $user->persona;
-        $roles = type_users::where('estado', 1)
-            ->where('name', '!=', 'admin')
-            ->get();
-        $facultades = Facultade::where('estado', 1)->get();
-        $escuelas = Escuela::where('estado', 1)->get();
+        // Si la persona autenticada es rol 2 (docente), excluir también el tipo 'docente titular'
+        $rolesQuery = type_users::where('estado', 1)
+            ->where('name', '!=', 'admin');
+
+        if ($user->getRolId() == 3) {
+            $rolesQuery->where('name', '!=', 'docente titular');
+            $rolesQuery->where('name', '!=', 'sub admin');
+        }
+
+        $roles = $rolesQuery->get();
+    $facultades = Facultad::where('estado', 1)->get();
+    $escuelas = Escuela::where('estado', 1)->get();
+    $semestres = Semestre::where('estado', 1)->orderBy('ciclo', 'desc')->get();
         
-        return view('segmento.registrar', compact('roles', 'facultades', 'escuelas', 'persona'));
+    return view('segmento.registrar', compact('roles', 'facultades', 'escuelas', 'persona', 'semestres'));
     }
 
     public function getEscuelas($facultad_id){
@@ -79,7 +95,7 @@ class PersonaController extends Controller
     public function store(Request $request){
         // Si no se proporciona correo, usar el DNI como correo temporal
         if (empty($request->correo_inst)) {
-            $request->correo_inst = $request->dni . '@temporal.com';
+            $request->correo_inst = $request->codigo . '@unjfsc.edu.pe';
         }
 
         // Si no se selecciona sexo, usar 'M' como valor por defecto
@@ -108,14 +124,25 @@ class PersonaController extends Controller
                 'provincia' => $request->provincia,
                 'distrito' => $request->distrito,
                 'usuario_id' => $user->id,
-                'rol_id' => $request->rol,
                 'date_create' => now(),
                 'date_update' => now(),
-                'estado' => 1,
-                'id_escuela' => $request->escuela,
+                'estado' => 1
             ]);
 
             $persona->save();
+
+            $asignar_personar = new asignacion_persona([
+                'id_semestre' => $request->semestre,
+                'id_persona' => $persona->id,
+                'id_rol' => $request->rol,
+                'id_escuela' => ($request->rol != 2 || $request->rol != 1) ? $request->escuela:null,
+                'id_facultad' => ($request->rol !=1) ? $request->facultad:null,
+                'date_create' => now(),
+                'date_update' => now(),
+                'estado' => 1
+            ]);
+
+            $asignar_personar->save();
 
             return back()->with('success', 'Formulario de Trámite (FUT) subido correctamente.');
 

@@ -704,11 +704,14 @@
   <select class="form-control custom-select mb-2" name="id_supervisor" id="select-supervisor-{{ $grupo->id }}">
 
     @php
-      $docente3 = \App\Models\Persona::where('rol_id', 3)
+      /*$docente3 = \App\Models\Persona::where('rol_id', 3)
           ->whereHas('grupo_estudiantes2.grupo', function ($query) use ($grupo) {
               $query->where('id_escuela', $grupo->id_escuela);
           })
-          ->get();
+          ->get();*/
+        $docente3 = \App\Models\Persona::whereHas('asignacion_persona', function ($query) {
+            $query->where('id_rol', 3);
+        })->get();
     @endphp
 
     @foreach($docente3 as $docente)
@@ -755,7 +758,12 @@
               Docente Asignado
             </label>
             <select class="form-control" name="id_supervisor">
-              @foreach($docentes as $docente)
+              @php
+              $supervisores = \App\Models\Persona::whereHas('asignacion_persona', function ($query) {
+              $query->where('id_rol', 4);
+              })->get();
+              @endphp
+              @foreach($supervisores as $docente)
               <option value="{{ $docente->id }}" {{ $docente->id == $grupo->id_docente ? 'selected' : '' }}>
                 {{ $docente->nombres }} {{ $docente->apellidos }}
               </option>
@@ -793,11 +801,15 @@
                 <tbody>
                 @php
                     $estudiantesAsignados = \App\Models\grupo_estudiante::pluck('id_estudiante')->toArray();
-                    $estudiantesGrupo = \App\Models\Persona::with('escuela')
+                    /*$estudiantesGrupo = \App\Models\Persona::with('escuela')
                         ->where('rol_id', 4)
                         ->where('id_escuela', $grupo->id_escuela)
                         ->whereNotIn('id',  $estudiantesAsignados)
-                        ->get();
+                        ->get();*/
+                    $estudiantesGrupo = \App\Models\Persona::whereHas('asignacion_persona', function ($query) use ($grupo) {
+                        $query->where('id_rol', 5)
+                              ->where('id_escuela', $grupo->id_escuela);
+                    })->whereNotIn('id', $estudiantesAsignados)->get();
                 @endphp
                   @foreach($estudiantesGrupo as $estudiante)
                   <tr>

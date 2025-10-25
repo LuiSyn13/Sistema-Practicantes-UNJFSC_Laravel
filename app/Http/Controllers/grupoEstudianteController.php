@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Escuela;
-use App\Models\Facultade;
+use App\Models\Facultad;
 use App\Models\grupo_estudiante;
 use App\Models\grupos_practica;
 use App\Models\Persona;
@@ -23,21 +23,31 @@ class grupoEstudianteController extends Controller
         }else{
             $grupos_practica = grupos_practica::where('id_docente',$id )->get();
         }
-        $docentes = Persona::where('rol_id', 3)->get(); // Ajusta rol_id si es necesario
+        //$docentes = Persona::where('rol_id', 3)->get(); // Ajusta rol_id si es necesario
+        $docentes = Persona::whereHas('asignacion_persona', function ($query) {
+            $query->where('id_rol', 3);
+        })->get();
         $supervisoresAsignados = DB::table('grupo_estudiante')
             ->select('id_supervisor')
             ->distinct()
             ->pluck('id_supervisor');
 
-        $docente2 = Persona::where('rol_id', 3)
+        /*$docente2 = Persona::where('rol_id', 3)
             ->whereNotIn('id', $supervisoresAsignados)
-            ->get();
+            ->get();*/
+        $docente2 = Persona::whereHas('asignacion_persona', function ($query) use ($supervisoresAsignados) {
+            $query->where('id_rol', 3)
+                  ->whereNotIn('id_persona', $supervisoresAsignados);
+        })->get();
 
         $semestres = Semestre::all();
         $escuelas = Escuela::all();
-        $facultades = Facultade::all();
+        $facultades = Facultad::all();
         
-        $estudiantes = Persona::with(relations: 'escuela')->get();
+        //$estudiantes = Persona::with(relations: 'escuela')->get();
+        $estudiantes = Persona::whereHas('asignacion_persona', function ($query) {
+            $query->where('id_rol', 5);
+        })->get();
 
         return view('asignatura.grupoAsignatura', compact(
             'docentes','docente2',

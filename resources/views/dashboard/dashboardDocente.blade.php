@@ -1144,18 +1144,8 @@ $(document).ready(function() {
 document.getElementById('escuela').addEventListener('change', function () {
     let escuelaId = this.value;
 
-    // Obtener semestres
-    fetch(`/docente/semestres/${escuelaId}`)
-        .then(res => res.json())
-        .then(data => {
-            const semestreSelect = document.getElementById('semestre');
-            semestreSelect.innerHTML = '<option value="">-- Todos --</option>';
-            data.forEach(item => {
-                semestreSelect.innerHTML += `<option value="${item.codigo}">${item.codigo}</option>`;
-            });
-        });
-
-    // Obtener supervisores
+    // El componente semestre-selector maneja automáticamente la carga de semestres
+    // Solo necesitamos cargar supervisores cuando cambie la escuela
     fetch(`/docente/supervisores/${escuelaId}`)
         .then(res => res.json())
         .then(data => {

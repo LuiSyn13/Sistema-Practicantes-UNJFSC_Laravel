@@ -24,11 +24,9 @@ class Persona extends Model
         'provincia',
         'distrito',
         'usuario_id',
-        'rol_id',
         'date_create',
         'date_update',
-        'estado',
-        'id_escuela'
+        'estado'
     ];
 
     public function user()
@@ -36,10 +34,11 @@ class Persona extends Model
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
-    public function rol()
+    public function asignacion_persona()
     {
-        return $this->belongsTo(type_users::class);
+        return $this->hasOne(asignacion_persona::class, 'id_persona');
     }
+
     public function matricula()
     {
         return $this->hasOne(Matricula::class);
@@ -72,13 +71,6 @@ class Persona extends Model
         return $this->hasMany(grupo_estudiante::class, 'id_supervisor');
     }
 
-    public function escuela()
-    {
-        return $this->belongsTo(Escuela::class, 'id_escuela'); // o el campo que tengas como FK
-    }
-    public function type_user() {
-        return $this->belongsTo(type_users::class, 'rol_id');
-    }
 
     public function evaluacione()
     {

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Escuela;
-use App\Models\Facultade;
+use App\Models\Facultad;
 use App\Models\grupos_practica;
 use App\Models\Persona;
 use App\Models\Semestre;
@@ -13,14 +13,15 @@ class asginacionController extends Controller
 {
     //as 
     public function index(){
-        $docentes = Persona::where('rol_id', 2)->get(); // Ajusta rol_id si es necesario
+        $docentes = Persona::whereHas('asignacion_persona', function($query){
+            $query->where('id_rol', 3);
+        })->get(); // Ajusta rol_id si es necesario
         $semestres = Semestre::all();
         $escuelas = Escuela::all();
-        $facultades = Facultade::all();
+        $facultades = Facultad::all();
         $grupos_practica = grupos_practica::all(); 
 
         return view('asignatura.asignatura', compact('docentes', 'semestres', 'escuelas', 'facultades', 'grupos_practica'));
-
     } 
 
     public function store(Request $request)

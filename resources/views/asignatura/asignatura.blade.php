@@ -870,35 +870,20 @@
         </div>
 
         <div class="modal-body">
-          <!-- Docente -->
-          <div class="form-group">
-            <label for="id_docente">
-              <i class="bi bi-person-badge"></i>
-              Docente
-            </label>
-            <select name="id_docente" class="form-control" required>
-              <option value="">Seleccione un docente</option>
-              @foreach($docentes as $docente)
-                <option value="{{ $docente->id }}">{{ $docente->nombres }} {{ $docente->apellidos }}</option>
-              @endforeach
-            </select>
-          </div>
-
-          <!-- Semestre -->
-          <div class="form-group">
-            <label for="id_semestre">
-              <i class="bi bi-calendar3"></i>
-              Semestre
-            </label>
-            <select name="id_semestre" class="form-control" required>
-              <option value="">Seleccione un semestre</option>
-              @foreach($semestres as $semestre)
-                <option value="{{ $semestre->id }}">{{ $semestre->codigo }}</option>
-              @endforeach
-            </select>
-          </div>
-
-          <!-- Facultad -->
+            <!-- Semestre -->
+            <div class="form-group">
+                <label for="id_semestre">
+                <i class="bi bi-calendar3"></i>
+                Semestre
+                </label>
+                <select name="id_semestre" class="form-control" required>
+                <option value="">Seleccione un semestre</option>
+                @foreach($semestres as $semestre)
+                    <option value="{{ $semestre->id }}">{{ $semestre->codigo }}</option>
+                @endforeach
+                </select>
+            </div>
+            <!-- Facultad -->
           <div class="form-group">
               <label for="facultad_id">
                 <i class="bi bi-bank"></i>
@@ -927,6 +912,22 @@
                   @endforeach
               </select>
           </div>
+          
+          <!-- Docente -->
+          <div class="form-group">
+            <label for="id_docente">
+              <i class="bi bi-person-badge"></i>
+              Docente
+            </label>
+            <select name="id_docente" class="form-control" required>
+              <option value="">Seleccione un docente</option>
+              @foreach($docentes as $docente)
+                <option value="{{ $docente->id }}">{{ $docente->nombres }} {{ $docente->apellidos }}</option>
+              @endforeach
+            </select>
+          </div>
+
+          
 
           <!-- Nombre del grupo -->
           <div class="form-group">
@@ -997,12 +998,6 @@
                 escuelaSelect.classList.add('is-valid');
             }, 300);
         });
-
-
-            Array.from(escuelaSelect.options).forEach(option => {
-                if (option.value === "") {
-                    option.hidden = false; 
-                    return;
 
         // Validación en tiempo real para selects
         const selects = document.querySelectorAll('select.form-control');

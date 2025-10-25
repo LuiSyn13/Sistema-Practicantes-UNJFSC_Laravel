@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreFacultadRequest;
 use App\Http\Requests\UpdateFacultadRequest;
-use App\Models\Facultade;
+use App\Models\Facultad;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -13,7 +13,7 @@ class FacultadController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Facultade::query();
+        $query = Facultad::query();
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -30,7 +30,7 @@ class FacultadController extends Controller
         try {
             DB::beginTransaction();
 
-            Facultade::create([
+            Facultad::create([
                 'name' => $request->name,
                 'user_create' => null,
                 'date_create' => now(),
@@ -47,7 +47,7 @@ class FacultadController extends Controller
         }
     }
 
-    public function update(UpdateFacultadRequest $request, Facultade $facultad)
+    public function update(UpdateFacultadRequest $request, Facultad $facultad)
     {
         try {
             $facultad->update([
@@ -65,7 +65,7 @@ class FacultadController extends Controller
     public function destroy($id)
     {
         try {
-            $facultad = Facultade::findOrFail($id);
+            $facultad = Facultad::findOrFail($id);
             $facultad->delete();
 
             return redirect()->route('facultad.index')

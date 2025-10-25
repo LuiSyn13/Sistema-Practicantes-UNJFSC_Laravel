@@ -46,5 +46,14 @@ class User extends Authenticatable
         return $this->hasOne(Persona::class, 'usuario_id');
     }
     
+    public function getRolId()
+    {
+        return $this->persona?->asignacion_persona?->id_rol;
+    }
+    
+    public function getRolName()
+    {
+        return $this->persona?->asignacion_persona?->rol?->name;
+    }
 
 }

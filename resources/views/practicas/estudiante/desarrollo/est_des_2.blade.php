@@ -21,7 +21,10 @@
                         @if ($practicaData->estado_proceso === 'en proceso' || $practicaData->estado_proceso === 'rechazado')
                             <p class="text-muted mb-3">Visualiza o edita tu formulario de trámite</p>
                             <div class="d-flex flex-column gap-2 align-items-center">
-                                <a href="{{ asset($practicaData->ruta_fut) }}" target="_blank" class="btn btn-warning btn-sm">
+                                @php
+                                    $rutaFutRel = $practicaData?->ruta_fut ? \Illuminate\Support\Str::after($practicaData->ruta_fut, 'storage/') : null;
+                                @endphp
+                                <a href="{{ $rutaFutRel ? route('documentos.show', ['documento' => $rutaFutRel]) : '#' }}" target="_blank" class="btn btn-warning btn-sm">
                                     <i class="bi bi-file-pdf me-1"></i> Ver PDF
                                 </a>
                                 <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalFUT">
@@ -30,7 +33,10 @@
                             </div>
                         @elseif ($practicaData->estado_proceso === 'completo')
                             <p class="text-muted mb-3">Visualiza tu formulario de trámite aprobado</p>
-                            <a href="{{ asset($practicaData->ruta_fut) }}" target="_blank" class="btn btn-warning btn-sm">
+                            @php
+                                $rutaFutRel = $practicaData?->ruta_fut ? \Illuminate\Support\Str::after($practicaData->ruta_fut, 'storage/') : null;
+                            @endphp
+                            <a href="{{ $rutaFutRel ? route('documentos.show', ['documento' => $rutaFutRel]) : '#' }}" target="_blank" class="btn btn-warning btn-sm">
                                 <i class="bi bi-file-pdf me-1"></i> Ver PDF
                             </a>
                         @endif

@@ -10,7 +10,7 @@ class Escuela extends Model
     use HasFactory;
 
     public function facultad(){
-        return $this->belongsTo(\App\Models\Facultade::class, 'facultad_id');
+        return $this->belongsTo(\App\Models\Facultad::class, 'facultad_id');
     }
     
 

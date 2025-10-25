@@ -569,10 +569,7 @@
                     {{-- SEMESTRE --}}
                     <div class="col-md-4">
                         <label class="form-label">Semestre:</label>
-                        <select name="semestre_codigo" id="semestre_codigo" class="form-select">
-                            <option value="">-- Seleccione --</option>
-                            {{-- Opciones se llenarán vía JS --}}
-                        </select>
+                        <x-semestre-selector name="semestre_codigo" class="form-select" />
                     </div>
                     
                     <div class="col-12 text-end">
@@ -715,51 +712,27 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-    function cargarSemestres(escuelaId) {
-        if (!escuelaId) {
-            semestreSelect.innerHTML = '<option value="">-- Seleccione --</option>';
-            return;
-        }
-
-        fetch(`/supervisor/semestres/${escuelaId}`)
-            .then(res => res.json())
-            .then(data => {
-                let options = '<option value="">-- Seleccione --</option>';
-                data.forEach(s => {
-                    const selected = s.codigo == selectedSemestre ? 'selected' : '';
-                    options += `<option value="${s.codigo}" ${selected}>${s.codigo}</option>`;
-                });
-                semestreSelect.innerHTML = options;
-            })
-            .catch(() => {
-                semestreSelect.innerHTML = '<option value="">Error al cargar</option>';
-            });
-    }
+    // El componente semestre-selector maneja automáticamente la carga de semestres
+    // No necesitamos esta función
 
     // Eventos
     facultadSelect.addEventListener('change', function () {
         const facultadId = this.value;
         escuelaSelect.innerHTML = '<option value="">Cargando...</option>';
-        semestreSelect.innerHTML = '<option value="">-- Seleccione --</option>';
 
         if (facultadId) {
-            cargarEscuelas(facultadId, function (escuelaId) {
-                cargarSemestres(escuelaId);
-            });
+            cargarEscuelas(facultadId);
         } else {
             escuelaSelect.innerHTML = '<option value="">-- Seleccione --</option>';
         }
     });
 
-    escuelaSelect.addEventListener('change', function () {
-        cargarSemestres(this.value);
-    });
+    // El componente semestre-selector maneja automáticamente la carga de semestres
+    // No necesitamos este evento
 
     // Carga inicial si viene con datos filtrados
     if (facultadSelect.value && selectedEscuela) {
-        cargarEscuelas(facultadSelect.value, function () {
-            cargarSemestres(selectedEscuela);
-        });
+        cargarEscuelas(facultadSelect.value);
     }
 
     // Animaciones progresivas para las métricas
@@ -1025,8 +998,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-
-@endsection
 @push('js')
 @endpush
 
