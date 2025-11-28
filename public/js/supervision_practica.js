@@ -50,17 +50,17 @@ document.addEventListener("DOMContentLoaded", function () {
             actualizarBotones(estado);
             actualizarFormularios(estado);
             
-            // Actualizar los selects de estado con el estado_proceso correspondiente a cada etapa
+            // Actualizar los selects de estado con el estado_practica correspondiente a cada etapa
             const etapas = ['E1', 'E2', 'E3', 'E4'];
             etapas.forEach(etapa => {
                 const selectId = `estado${etapa}`;
                 const selectEstado = document.getElementById(selectId);
-                if (selectEstado && data.estado_proceso) {
-                    // Si el estado_proceso es 'completo', mostrar 'Aprobado', de lo contrario usar el valor real
-                    selectEstado.value = data.estado_proceso === 'completo' ? 'aprobado' : data.estado_proceso;
+                if (selectEstado && data.estado_practica) {
+                    // Si el estado_practica es 'completo', mostrar 'Aprobado', de lo contrario usar el valor real
+                    selectEstado.value = data.estado_practica === 'completo' ? 'aprobado' : data.estado_practica;
                     
-                    // Si el estado_proceso es 'completo', cambiar el texto de la opción seleccionada
-                    if (data.estado_proceso === 'completo') {
+                    // Si el estado_practica es 'completo', cambiar el texto de la opción seleccionada
+                    if (data.estado_practica === 'completo') {
                         const option = selectEstado.querySelector(`option[value="aprobado"]`);
                         if (option) {
                             option.textContent = 'Completo';
@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('seccion-desarrollo-E3').style.display = esDesarrollo ? 'block' : 'none';
             document.getElementById('seccion-convalidacion-E3').style.display = esDesarrollo ? 'none' : 'block';
 
+            console.log('ID Práctica:', data.id);
             // IDs para formularios
             ['idE1', 'idE2', 'idE3', 'idE4'].forEach(id => {
                 document.getElementById(id).value = data.id;
@@ -191,7 +192,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     selectEstado.setAttribute('disabled', 'disabled');
                 } else if (i === n) {
-                    // Para la etapa actual, manejar según estado_proceso
+                    // Para la etapa actual, manejar según estado_practica
                     const selectedOption = selectEstado.options[selectEstado.selectedIndex];
                     if (selectedOption) {
                         selectedOption.textContent = selectedOption.value === 'aprobado' ? 'Aprobado' : 

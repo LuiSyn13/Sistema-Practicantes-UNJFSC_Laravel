@@ -724,16 +724,22 @@
             </h5>
         </div>
         <div class="docentes-card-body">
+            @if(Auth::user()->hasAnyRoles([1, 2]))
+            <x-data-filter
+                route="supervisor"
+                :facultades="$facultades"
+            />
+            @endif
             <div class="table-container">
                 <table class="table" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Código</th>
+                            <th>Email</th>
                             <th>Apellidos y Nombres</th>
-                            <th>DNI</th>
-                            <th>Correo</th>
-                            <th>Celular</th>
+                            <th>Facultad</th>
+                            <th>Escuela</th>
+                            <th>Sección</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -743,17 +749,13 @@
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 <span class="badge badge-light" style="background: var(--background-color); color: var(--text-primary); font-weight: 500;">
-                                    {{ $persona->codigo }}
+                                    {{ $persona->correo_inst }}
                                 </span>
                             </td>
                             <td>{{ strtoupper($persona->apellidos . ' ' . $persona->nombres) }}</td>
-                            <td>{{ $persona->dni }}</td>
-                            <td>
-                                <a href="mailto:{{ $persona->correo_inst }}" class="text-decoration-none">
-                                    {{ $persona->correo_inst }}
-                                </a>
-                            </td>
-                            <td>{{ $persona->celular }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->facultad->name }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->escuela->name }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->seccion}}</td>
                             <td>
                                 <button type="button" class="btn btn-info" 
                                 data-toggle="modal" data-target="#modalEditar{{ $persona->id }}" 

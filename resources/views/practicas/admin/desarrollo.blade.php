@@ -36,7 +36,7 @@
 </div>
 
 @php
-    $etapa = $practicaData->estado;
+    $etapa = $practicaData->state;
 @endphp
 
 @if ($etapa == 1)

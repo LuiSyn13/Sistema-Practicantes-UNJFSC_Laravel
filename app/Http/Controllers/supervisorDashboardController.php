@@ -26,9 +26,9 @@ class supervisorDashboardController extends Controller
     }
 
     if ($escuelaId) {
-        $semestres = DB::table('grupos_practicas')
+        $semestres = DB::table('grupo_practica')
             ->where('id_escuela', $escuelaId)
-            ->join('semestres', 'grupos_practicas.id_semestre', '=', 'semestres.id')
+            ->join('semestres', 'grupo_practica.id_semestre', '=', 'semestres.id')
             ->select('semestres.codigo')
             ->distinct()
             ->get();
@@ -37,7 +37,7 @@ class supervisorDashboardController extends Controller
     $supervisorId = auth()->user()->id;
 
     $baseQuery = DB::table('grupo_estudiante as ge')
-        ->join('grupos_practicas as gp', 'ge.id_grupo_practica', '=', 'gp.id')
+        ->join('grupo_practica as gp', 'ge.id_grupo_practica', '=', 'gp.id')
         ->join('personas as p', 'ge.id_estudiante', '=', 'p.id')
         ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
         ->leftJoin('evaluaciones as ev', 'ge.id_estudiante', '=', 'ev.alumno_id')
@@ -57,11 +57,13 @@ class supervisorDashboardController extends Controller
         $baseQuery->where('s.codigo', $semestreCodigo);
     }
 
-    $alumnos = $baseQuery
+    $alumnos = DB::table('evaluaciones as ev')
+    ->join('asignacion_persona as ap', 'ev.id_alumno', '=', 'ap.id')
+    ->join('personas as p', 'ap.id_persona', '=', 'p.id')
+    ->join('grupo_estudiante as ge', 'ev.id_alumno', '=', 'ge.id_estudiante')
     ->select(
         'p.nombres',
         'p.apellidos',
-        'e.name as escuela',
         'ev.anexo_6',
         'ev.anexo_7',
         'ev.anexo_8',

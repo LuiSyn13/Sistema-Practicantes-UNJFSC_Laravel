@@ -14,9 +14,7 @@ class Semestre extends Model
         protected $fillable = [
             'codigo',
             'ciclo',
-            'user_create',
-            'date_create',
-            'estado',
+            'state',
         ];
 
         public $timestamps = false;

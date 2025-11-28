@@ -11,22 +11,17 @@ class grupo_estudiante extends Model
     protected $table = 'grupo_estudiante';
 
     protected $fillable = [
-    'id_supervisor',
     'id_estudiante',
     'id_grupo_practica',
-    'estado'
+    'state'
     ];
     public function estudiante()
     {
-        return $this->belongsTo(Persona::class, 'id_estudiante');
+        return $this->belongsTo(asignacion_persona::class, 'id_estudiante');
     }
-    public function supervisor()
+    public function grupo_practica()
     {
-        return $this->belongsTo(Persona::class, 'id_supervisor');
-    }
-    public function grupo()
-    {
-        return $this->belongsTo(grupos_practica::class, 'id_grupo_practica');
+        return $this->belongsTo(grupo_practica::class, 'id_grupo_practica');
     }
 
 

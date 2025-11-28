@@ -34,8 +34,9 @@
                 </div>
 
                 <div class="nav-section">
-                    <div class="nav-section-title">Gestión de Usuarios</div>
                     @if (Auth::user()->hasAnyRoles([1, 2, 3]))
+                    <div class="nav-section-title">Gestión de Usuarios</div>
+                    
                         <!-- Menú desplegable de Usuarios -->
                         <div class="nav-dropdown">
                             <a href="#" class="nav-link nav-dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#collapseUsuarios" aria-expanded="false">
@@ -44,7 +45,7 @@
                                 <i class="bi bi-chevron-down nav-arrow"></i>
                             </a>
                             <div class="collapse nav-submenu" id="collapseUsuarios">
-                                @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
+                                @if (Auth::user()->hasAnyRoles([1, 2, 3]))
                                     <a href="{{ route('registrar') }}" class="nav-sublink">
                                         <i class="bi bi-person-plus"></i>
                                         <span>Añadir Usuario</span>
@@ -53,6 +54,12 @@
                                     
                                 @endif
                                 @if (Auth::user()->getRolId() == 1)
+                                    <a href="{{ route('subadmin') }}" class="nav-sublink {{ request()->routeIs('docente.*') ? 'active' : '' }}">
+                                        <i class="bi bi-mortarboard"></i>
+                                        <span>Admin. Facultades</span>
+                                    </a>
+                                @endif
+                                @if (Auth::user()->hasAnyRoles([1, 2]))
                                     <a href="{{ route('docente') }}" class="nav-sublink {{ request()->routeIs('docente.*') ? 'active' : '' }}">
                                         <i class="bi bi-mortarboard"></i>
                                         <span>Docentes</span>
@@ -70,16 +77,10 @@
                             </div>
                         </div>
                     @endif
-                    @if (Auth::user()->getRolId() == 4)
-                        <a href="{{ route('estudiante') }}" class="nav-link {{ request()->routeIs('estudiante.*') ? 'active' : '' }}">
-                            <i class="bi bi-people"></i>
-                            <span>Lista de Estudiantes</span>
-                        </a>
-                    @endif
                 </div>
 
                 <!-- Acreditar docente y supervisor -->
-                @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
+                @if (Auth::user()->hasAnyRoles([1, 2, 3]))
                     <div class="nav-section">
                         <div class="nav-section-title">Acreditar</div>
                         <div class="nav-dropdown">
@@ -90,6 +91,11 @@
                             </a>
                             <div class="collapse nav-submenu" id="collapseSupervision">
                                 <!-- Solo pueda rol 1 y 2 -->
+                                <a href="{{ route('registrar') }}" class="nav-sublink">
+                                    <i class="bi bi-person-plus"></i>
+                                    <span>Mi Acreditación</span>
+                                </a>
+                                <div class="nav-subheader">Acreditar a</div>
                                 @if (Auth::user()->hasAnyRoles([1, 2]))
                                     <a href="{{ route('Acreditar.Docente') }}" class="nav-link {{ request()->routeIs('acreditar.docente.*') ? 'active' : '' }}">
                                         <i class="bi bi-eye"></i>
@@ -127,12 +133,17 @@
                                     <i class="bi bi-diagram-3"></i>
                                     <span>Escuelas</span>
                                 </a>
+                                <!-- Secciones -->
+                                <a href="{{ route('seccion.index') }}" class="nav-link {{ request()->routeIs('seccion.*') ? 'active' : '' }}">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span>Secciones</span>
+                                </a>
                             </div>
                         </div>
                     </div>
                 @endif 
 
-                @if (Auth::user()->hasAnyRoles([1, 2, 3]))
+                @if (Auth::user()->hasAnyRoles([1, 2, 3, 4]))
                     <div class="nav-section">
                         <div class="nav-section-title">Asignación</div>
                         <!-- Menú desplegable de Asignaturas -->
@@ -154,12 +165,13 @@
                                     </a>
                                 </div>
                             </div>
-                        @elseif (Auth::user()->getRolId() == 2 || Auth::user()->getRolId() == 3)
-                            <a href="{{ route('estudiante_index') }}" class="nav-link {{ request()->routeIs('estudiante_index') ? 'active' : '' }}">
-                                    <i class="bi bi-people-fill"></i>
-                                    <span>Grupo - Estudiante</span>
-                            </a>
                         @endif
+                        @if (Auth::user()->getRolId() == 4)
+                        <a href="{{ route('grupo_estudiante') }}" class="nav-link {{ request()->routeIs('estudiante.*') ? 'active' : '' }}">
+                            <i class="bi bi-people"></i>
+                            <span>Grupo de Estudiantes</span>
+                        </a>
+                    @endif
                     </div>
                 @endif
 
@@ -193,14 +205,29 @@
                 @if (Auth::user()->getRolId() == 1 || Auth::user()->getRolId() == 3 || Auth::user()->getRolId() == 4)
                     <div class="nav-section">
                         <div class="nav-section-title">Evaluación</div>
+                        @if (Auth::user()->getRolId() != 4)
+                            <a href="{{ route('revisar.index') }}" class="nav-link {{ request()->routeIs('revisar.*') ? 'active' : '' }}">
+                                <i class="bi bi-eye"></i>
+                                <span>Revisión</span>
+                            </a>
+                        @endif
+                        @if (Auth::user()->getRolId() != 3)
+                        <a href="{{ route('evaluacionPractica.index') }}" class="nav-link {{ request()->routeIs('evaluacionPractica.*') ? 'active' : '' }}">
+                            <i class="bi bi-file-earmark-check"></i>
+                            <span>Practicas</span>
+                        </a>
+                        @endif
                         <a href="{{ route('pregunta.index') }}" class="nav-link {{ request()->routeIs('pregunta.*') ? 'active' : '' }}">
                             <i class="bi bi-question-circle"></i>
                             <span>Preguntas</span>
                         </a>
-                        <a href="{{ route('evaluacion.index') }}" class="nav-link {{ request()->routeIs('evaluacion.index.*') ? 'active' : '' }}">
-                            <i class="bi bi-bar-chart-line"></i>
-                            <span>Evaluación</span>
-                        </a>
+                        @if (Auth::user()->getRolId() != 4)
+                            <a href="{{ route('evaluacion.index') }}" class="nav-link {{ request()->routeIs('evaluacion.index.*') ? 'active' : '' }}">
+                                <i class="bi bi-bar-chart-line"></i>
+                                <span>Evaluación</span>
+                            </a>
+                        @endif
+                        
                     </div>
                 @endif
                 <div class="nav-section">
@@ -266,6 +293,9 @@
                         </div>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{{ route('perfil') }}"><i class="bi bi-person"></i> Mi Perfil</a></li>
+                            <!-- Seccion para cambiar contraseña -->
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ route('persona.change.password.view') }}"><i class="bi bi-lock"></i> Cambiar Contraseña</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a href="{{ route('cerrarSecion') }}">

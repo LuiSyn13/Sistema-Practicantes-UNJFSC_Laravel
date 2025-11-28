@@ -54,7 +54,7 @@
                 return $history ? $history->sortByDesc('created_at')->first() : null; 
             };
 
-            $latestCL = $getLatest('carga lectiva');
+            $latestCL = $getLatest('carga_lectiva');
             $estadoCL = $latestCL ? $latestCL->estado_archivo : 'Falta';
             $msjCL = ($estadoCL === 'Corregir') ? $latestCL->comentario : null;
 
@@ -68,15 +68,15 @@
             $estadoResolucion = $latestResolucion ? $latestResolucion->estado_archivo : 'Falta';
             $msjResolucion = ($estadoResolucion === 'Corregir') ? $latestResolucion->comentario : null;
 
-            $colorResolucion = match($estadoResolucion) {
+            /*$colorResolucion = match($estadoResolucion) {
                 'Aprobado' => 'success',
                 'Enviado' => 'warning',
                 'Corregir' => 'danger',
                 default => 'secondary',
-            };
+            };*/
         @endphp
         <!-- TARJETA 1: CARGA LECTIVA -->
-        <div class="col-lg-4">
+        <div class="col-lg-{{ ($ap->id_rol == 4)? 4 : 6; }}">
             <div class="card shadow-lg rounded-3 h-100 card-hover-scale">
                 <div class="card-body p-4 p-md-5">
                     <div class="d-flex align-items-start mb-4">
@@ -99,7 +99,7 @@
                         <div class="alert alert-success border-start border-4 border-success rounded-3 mt-4" role="alert">
                             <p class="mb-0 fw-bold">¡Documento Aprobado! ✅</p>
                             @if($latestCL->ruta ?? null)
-                                <a href="{{ asset($latestHorario->ruta) }}" target="_blank" class="btn btn-sm btn-outline-success mt-2">Ver Versión Aprobada</a>
+                                <a href="{{ asset($latestCL->ruta) }}" target="_blank" class="btn btn-sm btn-outline-success mt-2"><i class="bi bi-eye"></i> Ver Versión Aprobada</a>
                             @endif
                         </div>
                     @elseif($estadoCL === 'Enviado')
@@ -109,10 +109,10 @@
                     @elseif($estadoCL === 'Corregir')
                         <div class="alert alert-danger border-start border-4 border-danger rounded-3 mt-4" role="alert">
                             <p class="mb-1 fw-bold">⚠️ Debe Corregir la Resolución.</p>
-                            <p class="mb-0">Mensaje del Revisor: <strong>{{ $msjCL }}</strong></p>
+                            <p class="mb-0">Mensaje del Revisor: <strong>{{ $msjCL ?: 'Sin comentarios.' }}</strong></p>
                             {{-- Si hay una ruta para ver la versión que fue corregida --}}
                             @if($latestCL->ruta ?? null)
-                                <a href="{{ asset($latestHorario->ruta) }}" target="_blank" class="btn btn-sm btn-outline-danger mt-2">Ver Versión Anterior</a>
+                                <a href="{{ asset($latestCL->ruta) }}" target="_blank" class="btn btn-sm btn-outline-danger mt-2">Ver Versión Anterior</a>
                             @endif
                             {{-- mensaje que vuelva enviar --}}
                             <p class="mb-0">Vuelve enviar</p>
@@ -154,7 +154,7 @@
         </div>
         
         <!-- TARJETA 2: HORARIO DE CLASES -->
-        <div class="col-lg-4">
+        <div class="col-lg-{{ ($ap->id_rol == 4)? 4 : 6; }}">
             <div class="card shadow-lg rounded-3 h-100 card-hover-scale">
                 <div class="card-body p-4 p-md-5">
                     <div class="d-flex align-items-start mb-4">
@@ -178,7 +178,7 @@
                         <div class="alert alert-success border-start border-4 border-success rounded-3 mt-4" role="alert">
                             <p class="mb-0 fw-bold">¡Documento Aprobado! ✅</p>
                             @if($latestHorario->ruta ?? null)
-                                <a href="{{ asset($latestHorario->ruta) }}" target="_blank" class="btn btn-sm btn-outline-success mt-2">Ver Versión Aprobada</a>
+                                <a href="{{ asset($latestHorario->ruta) }}" target="_blank" class="btn btn-sm btn-outline-success mt-2"><i class="bi bi-eye"></i> Ver Versión Aprobada</a>
                             @endif
                         </div>
                     @elseif($estadoHorario === 'Enviado')
@@ -188,10 +188,10 @@
                     @elseif($estadoHorario === 'Corregir')
                         <div class="alert alert-danger border-start border-4 border-danger rounded-3 mt-4" role="alert">
                             <p class="mb-1 fw-bold">⚠️ Debe Corregir la Resolución.</p>
-                            <p class="mb-0">Mensaje del Revisor: <strong>{{ $msjHorario }}</strong></p>
+                            <p class="mb-0">Mensaje del Revisor: <strong>{{ $msjHorario ?: 'Sin comentarios.' }}</strong></p>
                             {{-- Si hay una ruta para ver la versión que fue corregida --}}
-                            @if($latestHorario->ruta_archivo ?? null)
-                                <a href="{{ asset($latestHorario->ruta_archivo) }}" target="_blank" class="btn btn-sm btn-outline-danger mt-2">Ver Versión Anterior</a>
+                            @if($latestHorario->ruta ?? null)
+                                <a href="{{ asset($latestHorario->ruta) }}" target="_blank" class="btn btn-sm btn-outline-danger mt-2">Ver Versión Anterior</a>
                             @endif
                             {{-- mensaje que vuelva enviar --}}
                             <p class="mb-0">Vuelve enviar</p>
@@ -231,6 +231,7 @@
         </div>
 
         <!-- TARJETA 3: RESOLUCION DE DESINGACION DE SUPERVISOR -->
+        @if($ap->id_rol == 4)
         <div class="col-lg-4">
             <div class="card shadow-lg rounded-3 h-100 card-hover-scale">
                 <div class="card-body p-4 p-md-5">
@@ -265,10 +266,10 @@
                     @elseif($estadoResolucion === 'Corregir')
                         <div class="alert alert-danger border-start border-4 border-danger rounded-3 mt-4" role="alert">
                             <p class="mb-1 fw-bold">⚠️ Debe Corregir la Resolución.</p>
-                            <p class="mb-0">Mensaje del Revisor: <strong>{{ $msjResolucion }}</strong></p>
+                            <p class="mb-0">Mensaje del Revisor: <strong>{{ $msjResolucion ?: 'Sin comentarios.' }}</strong></p>
                             {{-- Si hay una ruta para ver la versión que fue corregida --}}
-                            @if($latestResolucion->ruta_archivo ?? null)
-                                <a href="{{ asset($latestResolucion->ruta_archivo) }}" target="_blank" class="btn btn-sm btn-outline-danger mt-2">Ver Versión Anterior</a>
+                            @if($latestResolucion->ruta ?? null)
+                                <a href="{{ asset($latestResolucion->ruta) }}" target="_blank" class="btn btn-sm btn-outline-danger mt-2">Ver Versión Anterior</a>
                             @endif
                         </div>
                     @endif
@@ -305,6 +306,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Mensaje de Estado (Si aplica) -->

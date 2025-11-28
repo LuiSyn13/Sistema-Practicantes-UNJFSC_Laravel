@@ -33,7 +33,8 @@ class AppServiceProvider extends ServiceProvider
                 $user = Auth::user();
                 $persona = $user->persona;
                 $id = $persona->id;
-                $tipo = Practica::where('estudiante_id', $id)
+                $ap_id = $persona->asignacion_persona->id;
+                $tipo = Practica::where('id_ap', $id)
                                 ->value('tipo_practica');
                 $view->with([
                     'practica' => $tipo,

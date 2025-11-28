@@ -708,11 +708,16 @@
                     </thead>
                     <tbody>
                         @foreach ($personas as $index => $persona)
+                            @php
+                                // 1. Usa optional() para manejar posibles valores null en asignacion_persona
+                                // 2. Usa last() para obtener el último MODELO de la colección 'practicas'
+                                $ultimaPractica = optional($persona->asignacion_persona)->practicas->last();
+                            @endphp
                         <tr data-estudiante-id="{{ $persona->id }}">
                             <td class="align-middle text-center">{{ $index + 1 }}</td>
                             <td class="align-middle text-center">
-                                @if($persona->practica && $persona->practica->tipo_practica)
-                                    <span class="practice-badge">{{ $persona->practica->tipo_practica }}</span>
+                                @if($ultimaPractica)
+                                    <span class="practice-badge">{{ $ultimaPractica->tipo_practica }}</span>
                                 @else
                                     <span class="no-registered">Sin asignar</span>
                                 @endif
@@ -728,12 +733,12 @@
                                 @endif
                             </td>
                             <td class="align-middle text-center">
-                                @if($persona->practica)
+                                @if($ultimaPractica)
                                 <button 
                                     class="btn btn-info" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#modalProceso"
-                                    data-id_practica="{{ $persona->practica->id }}">
+                                    data-id_practica="{{ $ultimaPractica->id }}">
                                     <i class="bi bi-list-check"></i>
                                     Ver
                                 </button>

@@ -11,9 +11,11 @@ class Pregunta extends Model
 
     public $timestamps = false; // Porque tú estás usando date_create y date_update, no created_at/updated_at
 
+    protected $table = 'preguntas';
     protected $fillable = [
         'pregunta',
-        'estado',
+        'id_ap',
+        'state',
         'user_create',
         'user_update',
         'date_create',
@@ -23,5 +25,9 @@ class Pregunta extends Model
     public function respuestas()
     {
         return $this->hasMany(Respuesta::class);
+    }
+
+    public function asignacion_persona() {
+        return $this->belongsTo(asignacion_persona::class, 'id_ap');
     }
 }

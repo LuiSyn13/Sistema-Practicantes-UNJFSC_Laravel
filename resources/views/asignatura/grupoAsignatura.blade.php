@@ -630,19 +630,19 @@
               </tr>
             </thead>
             <tbody>
-              @foreach ($grupos_practica as $index => $grupo)
+              @foreach ($gp as $index => $grupo)
               <tr>
                 <td>
                   <span class="grupo-name">{{ $index + 1 }}</span>
                 </td>
-                <td class="docente-name">{{ $grupo->docente->nombres }} {{ $grupo->docente->apellidos }}</td>
+                <td class="docente-name">{{ $grupo->docente->persona->nombres }} {{ $grupo->docente->apellidos }}</td>
                 <td>
-                  <span class="grupo-name">{{ $grupo->semestre->codigo }}</span>
+                  <span class="grupo-name">{{ $grupo->seccion_academica->semestre->codigo }}</span>
                 </td>
                 <td>
-                  <span class="grupo-name">{{ $grupo->escuela->name }}</span>
+                  <span class="grupo-name">{{ $grupo->seccion_academica->escuela->name }}</span>
                 </td>
-                <td class="grupo-name">{{ $grupo->nombre_grupo }}</td>
+                <td class="grupo-name">{{ $grupo->name }}</td>
                 <td>
                   <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalEditar{{ $grupo->id }}">
                     <i class="bi bi-person-plus"></i>
@@ -676,7 +676,7 @@
 <!-- MODALES POR CADA GRUPO -->
 @foreach($grupos_practica as $grupo)
 <!-- Modal Asignar alumnos -->
-<div class="modal fade" id="modalEditar{{ $grupo->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="modalEditar{{ $grupo->id }}" tabindex="-1" role="dialog" aria-hidden="true" data-sa-id="{{ $grupo->seccion_academica->id }}">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <form method="POST" action="{{ route('grupos.asignarAlumnos') }}">
@@ -685,90 +685,25 @@
         <div class="modal-header bg-primary">
           <h5 class="modal-title">
             <i class="bi bi-person-plus-fill"></i> 
-            Asignar Alumnos al Grupo: <strong>{{ $grupo->nombre_grupo }}</strong>
+            Asignar Alumnos al Grupo: <strong>{{ $grupo->name }}</strong>
+            {{ $grupo->seccion_academica->id }}
           </h5>
           <button type="button" class="close text-white" data-dismiss="modal">
             <span>&times;</span>
           </button>
         </div>
         <div class="modal-body">
+          <div class="row g-3">
+              <div class="col-md-6">
+                  <label for="dtitular" class="form-label"><i class="bi bi-person-badge"></i>Docente titular</label>
+                  <input type="tel" class="form-control" value="{{ $grupo->docente->persona->nombres }} {{ $grupo->docente->persona->apellidos }}" disabled>
+              </div>
+              <div class="col-md-6">
+                  <label for="dsupervisor" class="form-label"><i class="bi bi-person-badge"></i>Docente supervisor</label>
+                  <input type="tel" class="form-control" value="{{ $grupo->supervisor->persona->nombres }} {{ $grupo->supervisor->persona->apellidos }}" disabled>
+              </div>
+            </div>
           <div class="form-group">
-
-
-            {{-- Lista de supervisores ya asignados a la escuela --}}
-{{-- Lista de supervisores ya asignados a la escuela --}}
-{{-- Supervisor Asignado --}}
-<div id="supervisor-asignado-{{ $grupo->id }}" class="mb-3 border p-3 rounded shadow-sm bg-white">
-  <label class="font-weight-bold mb-2">Supervisor Asignado</label>
-
-  <select class="form-control custom-select mb-2" name="id_supervisor" id="select-supervisor-{{ $grupo->id }}">
-
-    @php
-      /*$docente3 = \App\Models\Persona::where('rol_id', 3)
-          ->whereHas('grupo_estudiantes2.grupo', function ($query) use ($grupo) {
-              $query->where('id_escuela', $grupo->id_escuela);
-          })
-          ->get();*/
-        $docente3 = \App\Models\Persona::whereHas('asignacion_persona', function ($query) {
-            $query->where('id_rol', 3);
-        })->get();
-    @endphp
-
-    @foreach($docente3 as $docente)
-      <option value="{{ $docente->id }}" {{ $docente->id == $grupo->id_docente ? 'selected' : '' }}>
-        {{ $docente->nombres }} {{ $docente->apellidos }}
-      </option>
-    @endforeach 
-  </select>
-
-  <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="mostrarNuevoSupervisor({{ $grupo->id }})">
-    Asignar nuevo supervisor
-  </button>
-</div>
-
-{{-- Nueva Asignación de Supervisor --}}
-<div id="nuevo-supervisor-{{ $grupo->id }}" class="mb-3 border p-3 rounded shadow-sm bg-light" style="display: none;">
-  <label class="font-weight-bold mb-2">Asignar Nuevo Supervisor</label>
-
-  @if($docente2->isEmpty())
-    <div class="alert alert-warning text-center mb-2">
-      No hay supervisores disponibles
-    </div>
-  @else
-    <select class="form-control custom-select mb-2" name="id_supervisor" id="select-nuevo-supervisor-{{ $grupo->id }}" disabled>
-
-      @foreach($docente2 as $docente)
-        <option value="{{ $docente->id }}" {{ $docente->id == $grupo->id_docente ? 'selected' : '' }}>
-          {{ $docente->nombres }} {{ $docente->apellidos }}
-        </option>
-      @endforeach 
-    </select>
-  @endif
-
-  <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="cancelarNuevoSupervisor({{ $grupo->id }})">
-    Cancelar
-  </button>
-</div>
-
-
-
-
-            <label class="font-weight-bold">
-              <i class="bi bi-person-badge"></i>
-              Docente Asignado
-            </label>
-            <select class="form-control" name="id_supervisor">
-              @php
-              $supervisores = \App\Models\Persona::whereHas('asignacion_persona', function ($query) {
-              $query->where('id_rol', 4);
-              })->get();
-              @endphp
-              @foreach($supervisores as $docente)
-              <option value="{{ $docente->id }}" {{ $docente->id == $grupo->id_docente ? 'selected' : '' }}>
-                {{ $docente->nombres }} {{ $docente->apellidos }}
-              </option>
-              @endforeach
-            </select>
 
           </div>
           <div class="form-group">
@@ -795,42 +730,16 @@
                     </th>
                     <th>Nombre Completo</th>
                     <th>Código</th>
-                    <th>Escuela</th>
                   </tr>
                 </thead>
                 <tbody>
-                @php
-                    $estudiantesAsignados = \App\Models\grupo_estudiante::pluck('id_estudiante')->toArray();
-                    /*$estudiantesGrupo = \App\Models\Persona::with('escuela')
-                        ->where('rol_id', 4)
-                        ->where('id_escuela', $grupo->id_escuela)
-                        ->whereNotIn('id',  $estudiantesAsignados)
-                        ->get();*/
-                    $estudiantesGrupo = \App\Models\Persona::whereHas('asignacion_persona', function ($query) use ($grupo) {
-                        $query->where('id_rol', 5)
-                              ->where('id_escuela', $grupo->id_escuela);
-                    })->whereNotIn('id', $estudiantesAsignados)->get();
-                @endphp
-                  @foreach($estudiantesGrupo as $estudiante)
-                  <tr>
-                    <td class="text-center">
-                      <input type="checkbox" name="estudiantes[]" value="{{ $estudiante->id }}" class="check-estudiante" data-grupo="{{ $grupo->id }}">
-                    </td>
-                    <td>{{ $estudiante->nombres }} {{ $estudiante->apellidos }}</td>
-                    <td>
-                      <span class="badge badge-secondary">{{ $estudiante->codigo }}</span>
-                    </td>
-                    <td>{{ $estudiante->escuela->name ?? 'Sin escuela' }}</td>
-                  </tr>
-                  @endforeach
-                  @if($estudiantesGrupo->isEmpty())
-                  <tr>
-                    <td colspan="4" class="text-center text-muted">
-                      <i class="bi bi-person-x" style="font-size: 2rem; display: block; margin: 1rem 0;"></i>
-                      No hay estudiantes disponibles para asignar
+                  <!-- El contenido se cargará dinámicamente con JavaScript -->
+                  <tr class="loading-row">
+                    <td colspan="4" class="text-center text-muted py-4">
+                      <i class="bi bi-hourglass-split" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                      Cargando estudiantes disponibles...
                     </td>
                   </tr>
-                  @endif
                 </tbody>
               </table>
             </div>
@@ -852,7 +761,7 @@
 </div>
 
 <!-- Modal Ver grupo -->
-<div class="modal fade" id="modalVer{{ $grupo->id }}" tabindex="-1" role="dialog">
+<div class="modal fade" id="modalVer{{ $grupo->id }}" tabindex="-1" role="dialog" data-grupo-id="{{ $grupo->id }}">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header bg-info">
@@ -868,14 +777,14 @@
         <div class="row mb-4">
           <div class="col-md-6">
             <div class="info-card">
-              <p><strong><i class="bi bi-collection"></i> Nombre del grupo:</strong> {{ $grupo->nombre_grupo }}</p>
-              <p><strong><i class="bi bi-person-badge"></i> Docente:</strong> {{ $grupo->docente->nombres }} {{ $grupo->docente->apellidos }}</p>
+              <p><strong><i class="bi bi-collection"></i> Nombre del grupo:</strong> {{ $grupo->name }}</p>
+              <p><strong><i class="bi bi-person-badge"></i> Docente:</strong> {{ $grupo->docente->persona->nombres }} {{ $grupo->docente->persona->apellidos }}</p>
             </div>
           </div>
           <div class="col-md-6">
             <div class="info-card">
-              <p><strong><i class="bi bi-calendar3"></i> Semestre:</strong> {{ $grupo->semestre->codigo }}</p>
-              <p><strong><i class="bi bi-building"></i> Escuela:</strong> {{ $grupo->escuela->name }}</p>
+              <p><strong><i class="bi bi-calendar3"></i> Semestre:</strong> {{ $grupo->seccion_academica->semestre->codigo }}</p>
+              <p><strong><i class="bi bi-building"></i> Escuela:</strong> {{ $grupo->seccion_academica->escuela->name }}</p>
             </div>
           </div>
         </div>
@@ -893,54 +802,21 @@
             </div>
           </div>
         </div>
-        @php
-        $estudiantesAsignados = \App\Models\grupo_estudiante::with('estudiante')->where('id_grupo_practica', $grupo->id)->get();
-        @endphp
-        @if($estudiantesAsignados->isEmpty())
-          <div class="text-center text-muted py-4">
-            <i class="bi bi-person-x" style="font-size: 3rem; display: block; margin-bottom: 1rem; color: var(--border-color);"></i>
-            <p class="mb-0">No hay estudiantes asignados a este grupo.</p>
-          </div>
-        @else
-          <div class="tabla-wrapper">
-            <table class="table table-hover tabla-estudiantes-asignados" id="tablaAsignados{{ $grupo->id }}">
-              <thead>
-                <tr>
-                  <th>N°</th>
-                  <th>Nombre Completo</th>
-                  <th>Código</th>
-                  <th>Escuela</th>
-                  <th>Supervisor</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach($estudiantesAsignados as $index => $registro)
-                <tr>
-                  <td>
-                    <span class="badge badge-primary">{{ $index + 1 }}</span>
-                  </td>
-                  <td>{{ $registro->estudiante->nombres }} {{ $registro->estudiante->apellidos }}</td>
-                  <td>
-                    <span class="badge badge-secondary">{{ $registro->estudiante->codigo }}</span>
-                  </td>
-                  <td>{{ $registro->estudiante->escuela->name ?? 'Sin escuela' }}</td>
-                  <td>{{ $registro->supervisor?->nombres ?? 'Sin supervisor' }}</td>
-                  <td>
-                    <button type="button" class="btn btn-danger btn-sm abrir-eliminar"
-                        data-nombre="{{ $registro->estudiante->nombres }} {{ $registro->estudiante->apellidos }}"
-                        data-grupo="{{ $grupo->nombre_grupo }}"
-                        data-url="{{ route('grupos.eliminarAsignado', $registro->id) }}">
-                        <i class="bi bi-trash"></i>
-                        
-                    </button>
-                  </td>
-                </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
-        @endif
+        <div class="tabla-wrapper" id="wrapper-asignados-{{$grupo->id}}">
+          <table class="table table-hover tabla-estudiantes-asignados" id="tablaAsignados{{ $grupo->id }}">
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Nombre Completo</th>
+                <th>Código</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Contenido cargado por JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -965,8 +841,9 @@
         </div>
       </div>
       <div class="modal-footer">
-        <form id="formEliminarAsignado" method="GET">
+        <form id="formEliminarAsignado" method="POST">
           @csrf
+          @method('DELETE')
           <button type="submit" class="btn btn-danger">
             <i class="bi bi-trash"></i> 
             Eliminar
@@ -1076,13 +953,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // MODAL ELIMINAR
-    document.querySelectorAll('.abrir-eliminar').forEach(function(btn){
-        btn.addEventListener('click', function(){
-            let nombre = this.dataset.nombre;
-            let grupo = this.dataset.grupo;
-            let url = this.dataset.url;
-            abrirModalEliminar(nombre, grupo, url);
-        });
+    // Usamos delegación de eventos en el 'document' para que funcione con botones creados dinámicamente.
+    $(document).on('click', '.abrir-eliminar', function() {
+        const nombre = $(this).data('nombre');
+        const grupo = $(this).data('grupo');
+        const url = $(this).data('url');
+        abrirModalEliminar(nombre, grupo, url);
     });
 });
 
@@ -1259,6 +1135,138 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.disabled = true;
             }
         });
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Escuchar cuando un modal de asignación está a punto de mostrarse
+    $('.modal[id^="modalEditar"]').on('show.bs.modal', function (event) {
+        const modal = $(this);
+        const saId = modal.data('sa-id');
+        const grupoId = modal.attr('id').replace('modalEditar', '');
+        const tbody = modal.find('.tabla-estudiantes tbody');
+
+        console.log('SA ID ', saId)
+        // Mostrar estado de carga
+        tbody.html(`
+            <tr class="loading-row">
+                <td colspan="4" class="text-center text-muted py-4">
+                    <i class="bi bi-hourglass-split" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                    Cargando estudiantes disponibles...
+                </td>
+            </tr>
+        `);
+
+        // Realizar la petición a la API
+        fetch(`/api/asignar_estudiantes/${saId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta de la red');
+                }
+                return response.json();
+            })
+            .then(data => {
+                tbody.empty(); // Limpiar la tabla
+                console.log('Datos recibidos:', data);
+
+                if (data.length === 0) {
+                    tbody.html(`
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                <i class="bi bi-person-x" style="font-size: 2rem; display: block; margin: 1rem 0;"></i>
+                                No hay estudiantes disponibles para asignar en esta sección.
+                            </td>
+                        </tr>
+                    `);
+                } else {
+                    data.forEach(estudiante => {
+                        // El id del estudiante ahora es `estudiante.id` que viene de `ap.id`
+                        const row = `
+                            <tr>
+                                <td class="text-center">
+                                    <input type="checkbox" name="estudiantes[]" value="${estudiante.id}" class="check-estudiante" data-grupo="${grupoId}">
+                                </td>
+                                <td>${estudiante.nombres} ${estudiante.apellidos}</td>
+                                <td><span class="badge badge-secondary">${estudiante.codigo ?? 'N/A'}</span></td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar estudiantes:', error);
+                tbody.html('<tr><td colspan="4" class="text-center text-danger">Error al cargar los estudiantes.</td></tr>');
+            });
+    });
+});
+
+// Carga de estudiantes en modal "Ver Detalles"
+document.addEventListener('DOMContentLoaded', function() {
+    $('.modal[id^="modalVer"]').on('show.bs.modal', function (event) {
+        const modal = $(this);
+        const grupoId = modal.data('grupo-id');
+        const tbody = modal.find('.tabla-estudiantes-asignados tbody');
+        const wrapper = modal.find('.tabla-wrapper');
+
+        // Mostrar estado de carga
+        wrapper.show();
+        tbody.html(`
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                    <i class="bi bi-hourglass-split" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                    Cargando estudiantes asignados...
+                </td>
+            </tr>
+        `);
+
+        fetch(`/api/grupo_estudiantes/${grupoId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la respuesta de la red');
+                return response.json();
+            })
+            .then(data => {
+                tbody.empty();
+
+                if (data.length === 0) {
+                    // Ocultar la tabla y mostrar un mensaje
+                    wrapper.hide();
+                    if (wrapper.parent().find('.empty-state').length === 0) {
+                        wrapper.parent().append(`
+                            <div class="text-center text-muted py-4 empty-state">
+                                <i class="bi bi-person-x" style="font-size: 3rem; display: block; margin-bottom: 1rem; color: var(--border-color);"></i>
+                                <p class="mb-0">No hay estudiantes asignados a este grupo.</p>
+                            </div>
+                        `);
+                    }
+                } else {
+                    wrapper.parent().find('.empty-state').remove(); // Quitar mensaje de vacío si existía
+                    wrapper.show();
+                    data.forEach((registro, index) => {
+                        const row = `
+                            <tr>
+                                <td><span class=" badge-primary">${index + 1}</span></td>
+                                <td>${registro.nombres} ${registro.apellidos}</td>
+                                <td><span class="badge badge-secondary">${registro.codigo ?? 'N/A'}</span></td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm abrir-eliminar"
+                                        data-nombre="${registro.nombres} ${registro.apellidos}"
+                                        data-grupo="${registro.grupo_name}"
+                                        data-url="/grupos/eliminar-asignado/${registro.id}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
+                        tbody.append(row);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar estudiantes asignados:', error);
+                tbody.html('<tr><td colspan="5" class="text-center text-danger">Error al cargar los estudiantes.</td></tr>');
+            });
     });
 });
 </script>

@@ -725,63 +725,23 @@
         </div>
         <div class="docentes-card-body">
             {{-- Filtros --}}
-            <div class="filters-section">
-                <h6 class="filters-title">
-                    <i class="bi bi-funnel"></i>
-                    Filtros de Búsqueda
-                </h6>
-                <form method="GET" action="{{ route('admin.Dashboard') }}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label for="facultad" class="form-label">Facultad:</label>
-                            <select id="facultad" name="facultad" class="form-select">
-                                <option value="">-- Todas --</option>
-                                @foreach($facultades as $fac)
-                                    <option value="{{ $fac->id }}">{{ $fac->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="escuela" class="form-label">Escuela:</label>
-                            <select id="escuela" name="escuela" class="form-select">
-                                <option value="">-- Todas --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="docente" class="form-label">Docente:</label>
-                            <select id="docente" name="docente" class="form-select">
-                                <option value="">-- Todos --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="semestre" class="form-label">Semestre:</label>
-                            <select id="semestre" name="semestre" class="form-select">
-                                <option value="">-- Todos --</option>
-                            </select>
-                        </div>
-                        <div class="col-12 text-end">
-                            <button type="submit" class="btn-filter">
-                                <i class="bi bi-filter"></i> 
-                                Filtrar Datos
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+            @if(Auth::user()->hasAnyRoles([1, 2]))
+            <x-data-filter
+                route="estudiante"
+                :facultades="$facultades"
+            />
+            @endif
             <div class="table-container">
                 <table class="table" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Código</th>
+                            <th>Email</th>
                             <th>Apellidos y Nombres</th>
-                            <th>DNI</th>
-                            <th>Correo</th>
-                            <th>Celular</th>
-                            @if (Auth::user()->getRolId() != 4)
-                               <th>Acciones</th> 
-                            @endif
-                            
+                            <th>Facultad</th>
+                            <th>Escuela</th>
+                            <th>Sección</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -790,19 +750,14 @@
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 <span class="badge badge-light" style="background: var(--background-color); color: var(--text-primary); font-weight: 500;">
-                                    {{ $persona->codigo }}
+                                    {{ $persona->correo_inst }}
                                 </span>
                             </td>
                             <td>{{ strtoupper($persona->apellidos . ' ' . $persona->nombres) }}</td>
-                            <td>{{ $persona->dni }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->facultad->name }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->escuela->name }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->seccion}}</td>
                             <td>
-                                <a href="mailto:{{ $persona->correo_inst }}" class="text-decoration-none">
-                                    {{ $persona->correo_inst }}
-                                </a>
-                            </td>
-                            <td>{{ $persona->celular }}</td>
-                            @if (Auth::user()->getRolId() != 4)
-                                <td>
                                 <button type="button" class="btn btn-info" 
                                 data-toggle="modal" data-target="#modalEditar{{ $persona->id }}" 
                                 data-d="{{ $persona->distrito }}" data-p="{{ $persona->provincia }}"
@@ -819,8 +774,6 @@
                                     </button>
                                 </form>
                             </td>
-                            @endif
-                            
                         </tr>
                         @endforeach
                         @if($personas->isEmpty())

@@ -693,14 +693,9 @@
                         <tbody>
                             @foreach($alumnos as $alumno)
                             @php
-                                $evaluacion = $alumno->evaluacione;
+                                $evaluacion = $alumno->evaluaciones->first();
                                 $anexosCompletos = $evaluacion && $evaluacion->anexo_6 && $evaluacion->anexo_7 && $evaluacion->anexo_8;
                                 $entrevistaCompleta = $alumno->respuestas && $alumno->respuestas->count();
-
-                                $usuario = auth()->user();
-                                $esSupervisor = $alumno->grupo_estudiante->id_supervisor == $usuario->id;
-                                $esDocente = optional($alumno->grupo_estudiante->grupo)->id_docente == $usuario->id;
-                                $esAdmin = $usuario->persona?->rol_id == 1;
                             @endphp
                             <tr>
                                 <td class="text-center">
@@ -709,7 +704,7 @@
                                 <td class="student-name">{{ $alumno->nombres }} {{ $alumno->apellidos }}</td>
                                 <td class="text-center">
                                     <div class="evaluation-actions">
-                                        @if($esSupervisor || $esAdmin)
+                                        @if($userRol == 1 || $userRol == 4)
                                             @if($evaluacion)
                                                 @if($evaluacion->anexo_6)
                                                     <a href="{{ Storage::url($evaluacion->anexo_6) }}" class="btn btn-success anexo-btn" target="_blank">
@@ -744,7 +739,7 @@
                                                     Evaluar
                                                 </button>
                                             @endif
-                                        @elseif($esDocente)
+                                        @elseif($userRol == 3)
                                             <button class="btn btn-outline-{{ $anexosCompletos && $entrevistaCompleta ? 'success' : 'warning' }}"
                                                     data-bs-toggle="modal" data-bs-target="#verTodoDocenteModal-{{ $alumno->id }}">
                                                 <i class="bi bi-{{ $anexosCompletos && $entrevistaCompleta ? 'check-circle' : 'clock' }}"></i>

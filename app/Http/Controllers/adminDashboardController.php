@@ -4,6 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Persona;
+use App\Models\asignacion_persona;
+use App\Models\Matricula;
+use App\Models\Semestre;
+use App\Models\Facultad;
+use App\Models\Escuela;
+use App\Models\seccion_academica;
+use App\Models\Archivo;
+use Illuminate\Support\Facades\Log;
 
 class adminDashboardController extends Controller
 {
@@ -12,136 +21,110 @@ class adminDashboardController extends Controller
         $authUser = auth()->user();
         $userRolId = $authUser->getRolId();
         
-        // Obtener la asignación actual del usuario (asumiendo que hay una lógica para el semestre activo)
-        // Por ahora, tomamos la primera que encuentre, pero idealmente se filtraría por el semestre activo.
-        $asignacionActual = $authUser->persona->asignacion_persona;
+        // Usar la asignación del semestre activo. ¡Esto debe ser implementado!
+        // $asignacionActual = $authUser->getAsignacionActual();
+        $asignacionActual = $authUser->persona->asignacion_persona; // Manteniendo la lógica original por ahora
         $idFacultadSubAdmin = ($userRolId == 2) ? $asignacionActual->id_facultad : null;
+        $semestreActivoId = session('semestre_actual_id');
 
         // Cargar facultades para el filtro
-        $facultadesQuery = DB::table('facultades');
+        $facultadesQuery = Facultad::query();
         if ($userRolId == 2) {
             $facultadesQuery->where('id', $idFacultadSubAdmin);
         }
         $facultades = $facultadesQuery->get();
 
-        $escuelas = DB::table('escuelas')->get();
-        $semestres = DB::table('semestres')->get();
+        $escuelas = Escuela::all();
+        $semestres = Semestre::all();
 
-        // Consulta base basada en tu SQL original que funciona bien
-        $baseQuery = DB::table('grupo_estudiante as ge')
-            ->join('grupos_practicas as gp', 'ge.id_grupo_practica', '=', 'gp.id')
-            ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
-            ->join('facultades as f', 'e.facultad_id', '=', 'f.id')
-            ->join('semestres as s', 'gp.id_semestre', '=', 's.id')
-            ->join('personas as p', 'ge.id_estudiante', '=', 'p.id')
-            ->leftJoin('matriculas as m', 'ge.id_estudiante', '=', 'm.persona_id');
+        $secciones = seccion_academica::where('id_semestre', $semestreActivoId)
+            ->where('id_escuela', 1)
+            ->get();
 
-        // Si el usuario es Sub Admin, forzar el filtro por su facultad en todas las consultas.
+        // Consulta base con Eloquent
+        $baseAsignacionQuery = asignacion_persona::where('id_semestre', $semestreActivoId);
+            //->where('id_rol', 5); // Rol de Estudiante
+
         if ($userRolId == 2) {
-            $baseQuery->where('f.id', $idFacultadSubAdmin);
+            $baseAsignacionQuery->where('id_facultad', $idFacultadSubAdmin);
         }
 
-        // Aplicar filtros si se envían desde el request
         if ($request->filled('facultad')) {
-            $baseQuery->where('f.id', $request->facultad);
+            $baseAsignacionQuery->where('id_facultad', $request->facultad);
         }
 
         if ($request->filled('escuela')) {
-            $baseQuery->where('e.id', $request->escuela);
+            $baseAsignacionQuery->where('id_escuela', $request->escuela);
         }
 
-        // Aplicar siempre el filtro por el semestre activo en la sesión
-        $semestreActivoId = session('semestre_actual_id');
-        if ($semestreActivoId) {
-            $baseQuery->where('s.id', $semestreActivoId);
+        if ($request->filled('seccion')) {
+            $baseAsignacionQuery->where('id_seccion', $request->seccion);
         }
 
-        // Lista de estudiantes
-        $listaEstudiantes = (clone $baseQuery)
-            ->select(
-                'p.nombres',
-                'p.apellidos',
-                'e.name as escuela',
-                'f.name as facultad',
-                's.codigo as semestre',
-                DB::raw("COALESCE(m.estado_ficha, 'Sin registrar') as estado_ficha"),
-                DB::raw("COALESCE(m.estado_record, 'Sin registrar') as estado_record")
-            )
-            ->groupBy(
-                'p.nombres', 'p.apellidos', 'e.name', 'f.name', 's.codigo', 'm.estado_ficha', 'm.estado_record'
-            )
-            ->get();
+        // Lista de estudiantes, su matricula y su estado, Juntar asignacion_persona con Matricula -> Archivo
+        $listaEstudiantes = Matricula::whereHas('asignacion_persona', function ($query) use ($baseAsignacionQuery) {
+            // Clonamos la consulta base para no afectarla
+            $query->whereIn('id', (clone $baseAsignacionQuery)->pluck('id'));
+        })->with('asignacion_persona.persona', 'asignacion_persona.semestre', 'asignacion_persona.seccion_academica.escuela', 'asignacion_persona.seccion_academica.facultad')->get();
 
-        // Totales
-        $totalEstudiantes = (clone $baseQuery)->distinct()->count('ge.id_estudiante');
+        // --- Recálculo de Métricas con Eloquent ---
 
-        $totalMatriculados = (clone $baseQuery)
-            ->whereNotNull('m.estado_ficha')
-            ->distinct()
-            ->count('ge.id_estudiante');
+        // Total de estudiantes según filtros
+        $totalEstudiantes = (clone $baseAsignacionQuery)->where('id_rol', 5)->count();
 
-       $totalSupervisores = (clone $baseQuery)
-        ->whereNotNull('ge.id_supervisor')
-        ->distinct('ge.id_supervisor')
-        ->count('ge.id_supervisor');
+        // IDs de las asignaciones filtradas
+        $asignacionesIds = (clone $baseAsignacionQuery)->pluck('id');
 
+        // Total matriculados (que tienen registro en Matricula)
+        $totalMatriculados = Matricula::whereIn('id_ap', $asignacionesIds)->count();
 
-        $completos = (clone $baseQuery)
-            ->where('m.estado_ficha', 'Completo')
-            ->where('m.estado_record', 'Completo')
-            ->distinct()
-            ->count('ge.id_estudiante');
+        // Fichas completas
+        $completos = Matricula::whereIn('id_ap', $asignacionesIds)
+            ->where('estado_matricula', 'Completo')
+            ->count();
+
+        // Supervisores del semestre activo (no se ve afectado por filtros de facultad/escuela de estudiantes)
+        $totalSupervisores = asignacion_persona::where('id_rol', 4)
+                ->where('id_semestre', $semestreActivoId)
+                ->count('id_persona');
+        
+        $totalSupervisores = (clone $baseAsignacionQuery)->where('id_rol', 4)->count();
+
+        // Pendientes
 
         $pendientes = $totalMatriculados - $completos;
 
-        $totalPorEscuelaEnSemestre = DB::table('grupo_estudiante as ge')
-    ->join('grupos_practicas as gp', 'ge.id_grupo_practica', '=', 'gp.id')
-    ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
-    ->join('facultades as f', 'e.facultad_id', '=', 'f.id')
-    ->join('semestres as s', 'gp.id_semestre', '=', 's.id')
-    // Si es Sub Admin, restringir a su facultad
-    ->when($userRolId == 2, function ($query) use ($idFacultadSubAdmin) {
-        return $query->where('f.id', $idFacultadSubAdmin);
-    })
-    // Filtros del formulario
-    ->when($request->filled('facultad'), function ($query) use ($request) {
-        return $query->where('f.id', $request->facultad);
-    })
-    ->when($request->filled('semestre'), function ($query) use ($request) {
-        return $query->where('s.id', $request->semestre);
-    })
-    ->when($request->filled('escuela'), function ($query) use ($request) {
-        return $query->where('e.id', $request->escuela);
-    })
-    ->count('ge.id_estudiante');
+        $totalPorEscuelaEnSemestre = $totalEstudiantes; // Ya está filtrado
 
-        $fichasPorEscuela = (clone $baseQuery)
-            ->select(
-                'e.name as escuela',
-                DB::raw("SUM(CASE WHEN m.estado_ficha = 'Completo' THEN 1 ELSE 0 END) as completos"),
-                DB::raw("SUM(CASE WHEN m.estado_ficha = 'En proceso' THEN 1 ELSE 0 END) as en_proceso"),
-                DB::raw("SUM(CASE WHEN m.estado_ficha IS NULL OR m.estado_ficha NOT IN ('Completo', 'En proceso') THEN 1 ELSE 0 END) as pendientes")
-            )
-            ->groupBy('e.name')
-            ->get();
-
+        // Gráfico de Fichas por Escuela
+        $fichasPorEscuela = Escuela::select('escuelas.name as escuela', DB::raw('count(matriculas.id) as total'))
+            // 1. Unir Escuela con Seccion_Academica (sa)
+            // (La tabla 'escuelas' ya está implícita al iniciar la consulta)
+            ->join('seccion_academica as sa', 'sa.id_escuela', '=', 'escuelas.id')
             
-        $fichasPorMes = (clone $baseQuery)
-        ->join('matriculas as m2', 'ge.id_estudiante', '=', 'm2.persona_id')
-        ->select(
-            DB::raw('MONTHNAME(m2.created_at) as mes'),
+            // 2. Unir Seccion_Academica (sa) con Asignacion_Persona (ap)
+            ->join('asignacion_persona as ap', 'ap.id_sa', '=', 'sa.id')
+            
+            // 3. Unir Asignacion_Persona (ap) con Matriculas
+            ->join('matriculas', 'ap.id', '=', 'matriculas.id_ap')
+            
+            ->where('ap.id_semestre', $semestreActivoId)
+            ->groupBy('escuelas.id', 'escuelas.name', 'matriculas.estado_matricula')
+            ->get();
+        
+        // buscar en Archivos y contar las fichas por mes, agrupar por archivo y solo del tipo ficha
+        $fichasPorMes = Archivo::select(
+            DB::raw('MONTHNAME(created_at) as mes'),
             DB::raw('COUNT(*) as total')
         )
-        ->whereYear('m2.created_at', date('Y'))
-        ->groupBy(DB::raw('MONTH(m2.created_at)'), DB::raw('MONTHNAME(m2.created_at)'))
-        ->orderBy(DB::raw('MONTH(m2.created_at)'))
+        ->where('archivo_type', 'ficha')
+        ->groupBy(DB::raw('MONTH(created_at)'), DB::raw('MONTHNAME(created_at)'))
+        ->orderBy(DB::raw('MONTH(created_at)'))
         ->get();
-            
-
 
 
         return view('dashboard.dashboardAdmin', compact(
-            'facultades', 'escuelas', 'semestres',
+            'facultades', 'escuelas', 'semestres', 'secciones',
             'totalMatriculados', 'totalSupervisores',
             'completos', 'pendientes', 'totalPorEscuelaEnSemestre',
             'totalEstudiantes', 'listaEstudiantes','fichasPorEscuela','fichasPorMes'

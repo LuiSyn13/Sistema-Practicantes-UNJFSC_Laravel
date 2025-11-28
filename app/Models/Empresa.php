@@ -11,7 +11,7 @@ class Empresa extends Model
     protected $table = 'empresas';
 
     protected $fillable = [
-        'practicas_id',
+        'id_practica',
         'nombre',
         'ruc',
         'razon_social',
@@ -19,11 +19,11 @@ class Empresa extends Model
         'telefono',
         'correo',
         'web',
-        'estado'
+        'state'
     ];
 
     public function practicas()
     {
-        return $this->belongsTo(Practica::class, 'practicas_id','id');
+        return $this->belongsTo(Practica::class, 'id_practica');
     }
 }

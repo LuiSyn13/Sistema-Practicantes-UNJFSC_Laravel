@@ -17,11 +17,8 @@ return new class extends Migration
             $table->engine = 'InnoDB';
             $table->id();
             $table->string('name');
-            $table->unsignedBigInteger('user_create')->nullable();
-            $table->timestamp('date_create')->nullable();
-            $table->timestamp('date_update')->nullable();
-            $table->boolean('estado')->default(true); // true = activo
             $table->timestamps();
+            $table->boolean('state')->default(true); // true = activo
         });
     }
 

@@ -533,56 +533,6 @@
 
         <div class="dashboard-card-body">
 
-            {{-- Filtros --}}
-            <div class="filters-section">
-                <h6 class="filters-title">
-                    <i class="bi bi-funnel"></i>
-                    Filtros de Búsqueda
-                </h6>
-                <form method="GET" class="row g-3">
-                    {{-- FACULTAD --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Facultad:</label>
-                        <select name="facultad_id" id="facultad_id" class="form-select">
-                            <option value="">-- Seleccione --</option>
-                            @foreach($facultades as $facultad)
-                                <option value="{{ $facultad->id }}" {{ $facultadId == $facultad->id ? 'selected' : '' }}>
-                                    {{ $facultad->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- ESCUELA --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Escuela:</label>
-                        <select name="escuela_id" id="escuela_id" class="form-select">
-                            <option value="">-- Seleccione --</option>
-                            @foreach($escuelas as $escuela)
-                                <option value="{{ $escuela->id }}" {{ $escuelaId == $escuela->id ? 'selected' : '' }}>
-                                    {{ $escuela->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- SEMESTRE --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Semestre:</label>
-                        <select id="semestre" name="semestre" class="form-select">
-                            <option value="">-- Todos --</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-12 text-end">
-                        <button type="submit" class="btn-filter">
-                            <i class="bi bi-funnel"></i>
-                            Filtrar
-                        </button>
-                    </div>
-                </form>
-            </div>
-
             {{-- Métricas --}}
             <div class="metrics-section">
                 <h6 class="metrics-title">
@@ -624,7 +574,6 @@
                             <tr>
                                 <th>Nombres</th>
                                 <th>Apellidos</th>
-                                <th>Escuela</th>
                                 <th>Anexo 7</th>
                                 <th>Anexo 8</th>
                             </tr>
@@ -634,7 +583,6 @@
                                 <tr>
                                     <td>{{ $alumno->nombres }}</td>
                                     <td>{{ $alumno->apellidos }}</td>
-                                    <td>{{ $alumno->escuela }}</td>
                                     <td>
                                         @if($alumno->anexo_6)
                                             <a href="{{ asset('storage/' . $alumno->anexo_6) }}" target="_blank" class="btn-view-pdf">

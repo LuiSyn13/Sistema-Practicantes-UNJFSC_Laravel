@@ -3,7 +3,7 @@
 @endphp
 <!-- Segunda Etapa -->
 <div class="section-card">
-    <h3 class="section-title text-center mb-4">
+    <h3 id="subtitle" class="section-title text-center mb-4">
         <i class="bi bi-2-circle me-2"></i>
         Segunda Etapa - Documentación
     </h3>
@@ -17,35 +17,23 @@
                 </div>
                 <h5 class="text-primary font-weight-bold text-uppercase mb-3">Formulario de Trámite (FUT)</h5>
                 <div id="futStatus">
-                    @if ($practicaData->ruta_fut != null)
-                        @if ($practicaData->estado_proceso === 'en proceso' || $practicaData->estado_proceso === 'rechazado')
-                            <p class="text-muted mb-3">Visualiza o edita tu formulario de trámite</p>
-                            <div class="d-flex flex-column gap-2 align-items-center">
-                                @php
-                                    $rutaFutRel = $practicaData?->ruta_fut ? \Illuminate\Support\Str::after($practicaData->ruta_fut, 'storage/') : null;
-                                @endphp
-                                <a href="{{ $rutaFutRel ? route('documentos.show', ['documento' => $rutaFutRel]) : '#' }}" target="_blank" class="btn btn-warning btn-sm">
-                                    <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                                </a>
-                                <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalFUT">
-                                    <i class="bi bi-pencil-square me-1"></i> Editar Documento
-                                </button>
-                            </div>
-                        @elseif ($practicaData->estado_proceso === 'completo')
-                            <p class="text-muted mb-3">Visualiza tu formulario de trámite aprobado</p>
-                            @php
-                                $rutaFutRel = $practicaData?->ruta_fut ? \Illuminate\Support\Str::after($practicaData->ruta_fut, 'storage/') : null;
-                            @endphp
-                            <a href="{{ $rutaFutRel ? route('documentos.show', ['documento' => $rutaFutRel]) : '#' }}" target="_blank" class="btn btn-warning btn-sm">
+                    <div id="status-progress-or-rejected" style="display: none;">
+                        <p class="text-muted mb-3">Visualiza o edita tu formulario de trámite</p>
+                        <div class="d-flex flex-column gap-2 align-items-center">
+                            <a href="#" id="view-file-fut" target="_blank" class="btn btn-warning btn-sm">
                                 <i class="bi bi-file-pdf me-1"></i> Ver PDF
                             </a>
-                        @endif
-                    @else
+                            <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalFUT">
+                                <i class="bi bi-pencil-square me-1"></i> Editar Documento
+                            </button>
+                        </div>
+                    </div>
+                    <div id="btn-upload-fut">
                         <p class="text-muted mb-3">Sube tu formulario de trámite universitario</p>
                         <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalFUT">
                             <i class="bi bi-cloud-upload me-1"></i> Subir Documento
                         </button>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -94,7 +82,7 @@
             <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-blue), #1d4ed8); color: white;">
                 <h5 class="modal-title" id="modalFUTLabel">
                     <i class="bi bi-file-earmark-text me-2"></i>
-                    Formulario de Trámite (FUT)
+                    Formulario de Trámite (FUT) {{ $practicaData->id }}
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>

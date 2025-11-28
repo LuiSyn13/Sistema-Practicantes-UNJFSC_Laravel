@@ -30,7 +30,7 @@
                             <form id="formEditPerfil" method="POST" action="{{ route('persona.editar') }}" enctype="multipart/form-data">
                                 @csrf
                                 @method('POST')
-                                <input type="hidden" name="persona_id" value="{{ $persona->id }}">
+                                <input type="hidden" name="persona_id" value="{{ $ap->persona->id }}">
 
                                 <div class="row mb-3">
                                     <div class="col-md-4">
@@ -95,8 +95,8 @@
                                     Fotografía
                             </h6>
                             <div class="card-body text-center">
-                                @if ($persona->ruta_foto)
-                                    <img src="{{ asset($persona->ruta_foto) }}" alt="Foto" class="img-fluid rounded-circle mb-3"
+                                @if ($ap->persona->ruta_foto)
+                                    <img src="{{ asset($ap->persona->ruta_foto) }}" alt="Foto" class="img-fluid rounded-circle mb-3"
                                         style="width: 200px; height: 200px; object-fit: cover; border: 3px solid #c3dafe;">
                                 @else
                                          <i class="img-fluid bi bi-person-fill mb-3" style="font-size: 200px; color: var(--primary-blue);"></i>
@@ -136,7 +136,7 @@
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">
-                    @if ($persona->ruta_foto)
+                    @if ($ap->persona->ruta_foto)
                         <img src="{{ asset($persona->ruta_foto) }}" alt="Vista previa" class="img-fluid rounded-circle" 
                             style="width: 150px; height: 150px; object-fit: cover;" 
                             id="previewImage">
@@ -146,7 +146,7 @@
                 </div>
                 <form action="{{ route('store.foto') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <input type="hidden" name="persona_id" value="{{ $persona->id }}">
+                    <input type="hidden" name="persona_id" value="{{ $ap->persona->id }}">
                     <div class="upload-area-modal text-center p-4 border-2 border-dashed rounded-3" style="border-color: var(--border-gray);">
                         <i class="bi bi-camera text-muted mb-3" style="font-size: 3rem;"></i>
                         <p class="mb-3">Selecciona una imagen</p>

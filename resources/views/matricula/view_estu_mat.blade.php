@@ -17,34 +17,27 @@
                                         <div class="text-center">
                                             <i class="bi bi-file-earmark-text text-primary mb-3" style="font-size: 3rem;"></i>
                                             <h5 class="text-primary font-weight-bold mb-3">Ficha de Matrícula</h5>
-                                            @if(isset($persona?->matricula) && $persona?->matricula->ruta_ficha)
-                                                @if ($persona?->matricula->estado_ficha == 'Completo')
+                                            @if(isset($latestFicha) /*&& $persona?->matricula->ruta_ficha*/)
+                                                @if ($estadoFicha == 'Aprobado')
                                                     <div class="mt-3">
                                                         <p><strong>Estado:</strong>
                                                             <span class="status-badge status-completed">Completo</span>
                                                             <span class="text-success ms-2">✓</span>
                                                         </p>
                                                         <div class="d-grid gap-2">
-                                                            {{-- Enlace original (público) --}}
-                                                            @php
-                                                                $rutaFichaRel = $persona?->matricula->ruta_ficha ? \Illuminate\Support\Str::after($persona?->matricula->ruta_ficha, 'storage/') : null;
-                                                            @endphp
-                                                            <a href="{{ $rutaFichaRel ? route('documentos.show', ['documento' => $rutaFichaRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                            <a href="{{ asset($latestFicha->ruta) }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                                 <i class="bi bi-eye me-1"></i>Ver PDF
                                                             </a>
                                                         </div>
                                                     </div>
-                                                @elseif ($persona?->matricula->estado_ficha == 'en proceso')
+                                                @elseif ($estadoFicha == 'Enviado')
                                                     <!-- Simulando la lógica de Laravel -->
                                                     <div class="mt-3">
                                                         <p><strong>Estado:</strong>
                                                             <span class="status-badge status-active">En Progreso</span>
                                                         </p>
                                                         <div class="d-grid gap-2">
-                                                            @php
-                                                                $rutaFichaRel = $persona?->matricula->ruta_ficha ? \Illuminate\Support\Str::after($persona?->matricula->ruta_ficha, 'storage/') : null;
-                                                            @endphp
-                                                            <a href="{{ $rutaFichaRel ? route('documentos.show', ['documento' => $rutaFichaRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                            <a href="{{ asset($latestFicha->ruta) }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                                 <i class="bi bi-eye me-1"></i>Ver PDF
                                                             </a>
                                                             <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalFicha">
@@ -75,34 +68,28 @@
                                         <div class="text-center">
                                             <i class="bi bi-file-earmark-bar-graph text-primary mb-3" style="font-size: 3rem;"></i>
                                             <h5 class="text-primary font-weight-bold mb-3">Récord Académico</h5>
-                                            @if(isset($persona?->matricula) && $persona?->matricula->ruta_record)
-                                                @if ($persona?->matricula->estado_record == 'Completo')
+                                            @if(isset($latestRecord) /* && $persona?->matricula->ruta_record*/)
+                                                @if ($estadoRecord == 'Aprobado')
                                                     <div class="mt-3">
                                                         <p><strong>Estado:</strong>
                                                             <span class="status-badge status-completed">Completo</span>
                                                             <span class="text-success ms-2">✓</span>
                                                         </p>
                                                         <div class="d-grid gap-2">
-                                                            @php
-                                                                $rutaRecordRel = $persona?->matricula->ruta_record ? \Illuminate\Support\Str::after($persona?->matricula->ruta_record, 'storage/') : null;
-                                                            @endphp
-                                                            <a href="{{ $rutaRecordRel ? route('documentos.show', ['documento' => $rutaRecordRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                            <a href="{{ asset($latestRecord->ruta) }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                                 <i class="bi bi-eye me-1"></i>Ver PDF
                                                             </a>
                                                         </div>
                                                     </div>
                                                     
-                                                @elseif ($persona?->matricula->estado_record == 'en proceso')
+                                                @elseif ($estadoRecord == 'Enviado')
                                                 <!-- Simulando la lógica de Laravel -->
                                                 <div class="mt-3">
                                                     <p><strong>Estado:</strong>
                                                         <span class="status-badge status-active">En Progreso</span>
                                                     </p>
                                                     <div class="d-grid gap-2">
-                                                        @php
-                                                            $rutaRecordRel = $persona?->matricula->ruta_record ? \Illuminate\Support\Str::after($persona?->matricula->ruta_record, 'storage/') : null;
-                                                        @endphp
-                                                        <a href="{{ $rutaRecordRel ? route('documentos.show', ['documento' => $rutaRecordRel]) : '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <a href="{{ asset($latestRecord->ruta) }}" target="_blank" class="btn btn-outline-primary btn-sm">
                                                             <i class="bi bi-eye me-1"></i>Ver PDF
                                                         </a>
                                                         <button class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalRecord">
@@ -147,7 +134,7 @@
                 <div class="modal-dialog">
                     <form action="{{ route('subir.ficha') }}" method="POST" enctype="multipart/form-data" class="modal-content">
                         @csrf
-                        <input type="hidden" name="persona_id" value="{{ $persona->id }}">
+                        <input type="hidden" name="ap_id" value="{{ $ap->id }}">
                         <div class="modal-header">
                             <h5 class="modal-title" id="modalFichaLabel">
                                 <i class="bi bi-upload me-2"></i>Subir Ficha de Matrícula
@@ -182,7 +169,7 @@
                 <div class="modal-dialog">
                     <form action="{{ route('subir.record') }}" method="POST" enctype="multipart/form-data" class="modal-content">
                         @csrf
-                        <input type="hidden" name="persona_id" value="{{ $persona->id }}">
+                        <input type="hidden" name="ap_id" value="{{ $ap->id }}">
                         <div class="modal-header">
                             <h5 class="modal-title" id="modalRecordLabel">
                                 <i class="bi bi-upload me-2"></i>Subir Récord Académico

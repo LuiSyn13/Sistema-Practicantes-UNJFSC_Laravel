@@ -17,9 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('codigo')->unique(); // Ej: 2025-I
             $table->string('ciclo');            // Ej: "Primer Ciclo", "Segundo Ciclo"
-            $table->timestamp('date_create')->nullable();
-            $table->timestamp('date_update')->nullable();
-            $table->boolean('estado')->default(true);
+            $table->timestamps();
+            $table->boolean('state')->default(true);
         });
     }
 
