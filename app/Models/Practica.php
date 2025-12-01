@@ -20,7 +20,7 @@ class Practica extends Model
         'state'
     ];
 
-    public function ap()
+    public function asignacion_persona()
     {
         return $this->belongsTo(asignacion_persona::class, 'id_ap');
     }

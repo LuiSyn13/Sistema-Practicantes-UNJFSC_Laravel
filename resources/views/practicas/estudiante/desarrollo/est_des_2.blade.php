@@ -17,29 +17,30 @@
                 </div>
                 <h5 class="text-primary font-weight-bold text-uppercase mb-3">Formulario de Trámite (FUT)</h5>
                 <div id="futStatus">
-                    <div id="status-progress-or-rejected" style="display: none;">
-                        <p class="text-muted mb-3">Visualiza o edita tu formulario de trámite</p>
-                        <div class="d-flex flex-column gap-2 align-items-center">
-                            <a href="#" id="view-file-fut" target="_blank" class="btn btn-warning btn-sm">
-                                <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                            </a>
-                            <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalFUT">
-                                <i class="bi bi-pencil-square me-1"></i> Editar Documento
-                            </button>
-                        </div>
-                    </div>
-                    <div id="btn-upload-fut">
-                        <p class="text-muted mb-3">Sube tu formulario de trámite universitario</p>
-                        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalFUT">
-                            <i class="bi bi-cloud-upload me-1"></i> Subir Documento
-                        </button>
-                    </div>
+                    <span id="status-file-fut" class="status-badge status-completed">Completo</span>
+                    <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                        data-type="fut"
+                        data-bs-target="#archivoModal">Visualizar</button>
                 </div>
             </div>
         </div>
 
         <!-- Carta de Presentación -->
         <div class="col-md-6 mb-4">
+            <div class="practice-stage-card text-center h-100">
+                <div class="stage-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
+                    <i class="bi bi-envelope"></i>
+                </div>
+                <h5 class="text-primary font-weight-bold text-uppercase mb-3">Carta de Presentación</h5>
+                <div id="futStatus">
+                    <span id="status-file-fut" class="status-badge status-completed">Completo</span>
+                    <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                        data-type="carta_presentacion"
+                        data-bs-target="#archivoModal">Visualizar</button>
+                </div>
+            </div>
+        </div>
+        <!--<div class="col-md-6 mb-4">
             <div class="practice-stage-card text-center h-100">
                 <div class="stage-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">
                     <i class="bi bi-envelope"></i>
@@ -71,9 +72,10 @@
                     @endif
                 </div>
             </div>
-        </div>
+        </div>-->
     </div>
 </div>
+
 
 <!-- Modal Formulario de Trámite (FUT) -->
 <div class="modal fade" id="modalFUT" tabindex="-1" aria-labelledby="modalFUTLabel" aria-hidden="true">

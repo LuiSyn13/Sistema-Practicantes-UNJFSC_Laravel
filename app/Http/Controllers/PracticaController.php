@@ -18,20 +18,12 @@ class PracticaController extends Controller
 {
     public function lst_supervision(){
         $personas = Persona::with([
-                'asignacion_persona.practicas',
-                'asignacion_persona.practicas.empresa', 
-                'asignacion_persona.practicas.jefeInmediato'
+                'asignacion_persona.practicas'
             ])
             ->whereHas('asignacion_persona', function ($query) {
                 $query->where('id_rol', 5);
             })
             ->get();
-            /*->whereHas('rol', function ($query) {
-                $query->where('id', 4);
-            })
-            ->get();*/
-    
-            //dd($personas);
             
         return view('practicas.admin.supervision', compact('personas'));
     }
@@ -39,6 +31,14 @@ class PracticaController extends Controller
     public function show($id){
         $practica = Practica::with(['empresa', 'jefeInmediato'])->findOrFail($id);
         return response()->json($practica);
+    }
+
+    public function showTypeFile($type, $id){
+        $archivo = Practica::where('id', $id)->with('archivos')->get();
+        /*->whereHas('archivos', function ($query) {
+            $query->where('tipo', $type);
+        })->get();*/
+        return response()->json($archivo);
     }
 
     public function proceso(Request $request) {
@@ -212,14 +212,14 @@ class PracticaController extends Controller
 
     public function storeFut(Request $request){
         $request->validate([
-            'persona_id' => 'required|exists:personas,id',
+            'practica' => 'required|exists:practicas,id',
             'fut' => 'required|file|mimes:pdf|max:20480',
         ]);
 
-        $personaId = $request->persona_id;
+        $id_p = $request->practica;
 
         // Buscar o crear la matrícula
-        $practica = Practica::findOrFail($personaId);
+        $practica = Practica::findOrFail($id_p);
 
         // Guardar el archivo
         $file = $request->file('fut');
@@ -251,14 +251,14 @@ class PracticaController extends Controller
 
     public function storeCartaPresentacion(Request $request){
         $request->validate([
-            'persona_id' => 'required|exists:personas,id',
+            'practica' => 'required|exists:practicas,id',
             'carta_presentacion' => 'required|file|mimes:pdf|max:20480',
         ]);
 
-        $personaId = $request->persona_id;
+        $id_p = $request->practica;
 
         // Buscar o crear la matrícula
-        $practica = Practica::findOrFail($personaId);
+        $practica = Practica::findOrFail($id_p);
 
         // Guardar el archivo
         $file = $request->file('carta_presentacion');
@@ -269,18 +269,28 @@ class PracticaController extends Controller
         $practica->update([
             'estado_proceso' => 'en proceso',
         ]);
-        
+
+        Archivo::create([
+            'archivo_id' => $practica->id,
+            'archivo_type' => Practica::class,
+            'estado_archivo' => 'Enviado',
+            'tipo' => 'carta_presentacion',
+            'ruta' => $rutaCompleta,
+            'comentario' => null,
+            'subido_por_user_id' => $practica->id_ap,
+            'state' => 1
+        ]);
 
         return back()->with('success', 'Carta de Presentación subida correctamente.');
     }
 
     public function storeCartaAceptacion(Request $request){
         $request->validate([
-            'persona_id' => 'required|exists:personas,id',
+            'practica' => 'required|exists:practicas,id',
             'carta_aceptacion' => 'required|file|mimes:pdf|max:20480',
         ]);
 
-        $personaId = $request->persona_id;
+        $id_p = $request->practica;
 
         // Guardar el archivo
         $nombre = 'carta_aceptacion_' . $personaId . '_' . time() . '.pdf';

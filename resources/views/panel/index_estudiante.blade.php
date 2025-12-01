@@ -253,11 +253,11 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="fw-semibold">Estado Actual</span>
-                                @if(isset($persona?->practica))
-                                    @if ($persona?->practica->estado == 5)
+                                @if(isset($practicas))
+                                    @if ($practicas->state == 5)
                                         <span class="status-badge status-completed">Completo</span>
                                         <span class="text-success">✓</span>
-                                    @elseif ($persona?->practica->estado_proceso == 'en proceso' || $persona?->practica->estado_proceso == 'rechazado')
+                                    @elseif ($practicas->estado_practica == 'en proceso' || $practicas->estado_practica == 'rechazado')
                                         <span class="status-badge status-active">En Proceso</span>
                                     @endif
                                 @else
@@ -268,12 +268,12 @@
 
                         <div class="info-item">
                             <div class="info-label">Empresa</div>
-                            <div class="info-value">{{ $persona->practica->empresa->nombre ?? 'No Asignada' }}</div>
+                            <div class="info-value">{{ $practicas->empresa->nombre ?? 'No Asignada' }}</div>
                         </div>
 
                         <div class="info-item">
                             <div class="info-label">Jefe Inmediato</div>
-                            <div class="info-value">{{ $persona->practica->jefeInmediato->nombres ?? 'No Asignado' }}</div>
+                            <div class="info-value">{{ $practicas->jefeInmediato->nombres ?? 'No Asignado' }}</div>
                         </div>
 
                         <div class="info-item">

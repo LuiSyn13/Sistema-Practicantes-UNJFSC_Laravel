@@ -144,6 +144,8 @@ Route::post('/subir/clectiva', [ArchivoController::class, 'subirCLectiva'])->mid
 Route::post('/subir/horario', [ArchivoController::class, 'subirHorario'])->middleware('auth')->name('subir.horario');
 Route::post('/subir/resolucion', [ArchivoController::class, 'subirResolucion'])->middleware('auth')->name('subir.resolucion');
 Route::post('/subir/anexo', [ArchivoController::class, 'subirAnexo'])->middleware('auth')->name('subir.anexo');
+Route::post('/subir/documento', [ArchivoController::class, 'subirDocumentoPractica'])->middleware('auth')->name('subir.documento');
+Route::post('/actualizar/archivo', [ArchivoController::class, 'actualizarEstadoArchivo'])->middleware('auth')->name('actualizar.archivo');
 Route::post('/actualizar/anexo', [ArchivoController::class, 'actualizarEstadoAnexo'])->middleware('auth')->name('actualizar.anexo');
 
 Route::get('/documentos', [ArchivoController::class, 'showPDF'])->middleware('auth')->name('documentos.show');
@@ -220,6 +222,7 @@ Route::post('/store.foto', [PersonaController::class, 'storeFoto'])->name('store
 
 
 Route::get('/practica/{id}', [PracticaController::class, 'show'])->name('practica.show');
+Route::get('/practica/{type}/{id}', [PracticaController::class, 'showTypeFile'])->name('practica.typefile');
 
 Route::get('/dashboard-docente', [DashboardDocenteController::class, 'index'])->middleware('active')->name('dashboard.docente');
 Route::get('/dashboardSupervisor', [supervisorDashboardController::class, 'indexsupervisor'])->middleware('active')->name('supervisor.Dashboard');

@@ -17,6 +17,12 @@
                 </div>
                 <h5 class="text-primary font-weight-bold text-uppercase mb-3">Carta de Aceptación</h5>
                 <div id="cartaAceptacionStatus">
+                    <span id="status-file-cart" class="status-badge status-completed">Completo</span>
+                    <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                        data-type="carta_aceptacion"
+                        data-bs-target="#archivoModal">Visualizar</button>
+                </div>
+                <!--<div id="cartaAceptacionStatus">
                     @if ($practicaData->ruta_carta_aceptacion != null)
                         @if ($practicaData->estado_proceso === 'en proceso' || $practicaData->estado_proceso === 'rechazado')
                             <p class="text-muted mb-3">Visualiza o edita tu carta de aceptación</p>
@@ -40,7 +46,7 @@
                             <i class="bi bi-cloud-upload me-1"></i> Subir Documento
                         </button>
                     @endif
-                </div>
+                </div>-->
             </div>
         </div>
 

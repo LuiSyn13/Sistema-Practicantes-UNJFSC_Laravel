@@ -128,7 +128,7 @@
                     <i class="bi bi-arrow-left me-1"></i>
                     Volver al Inicio
                 </button>
-            </div>
+        </div>
         <!--<div class="section-card mb-4">
             
             
@@ -171,60 +171,123 @@
             </h2>
 
             <div class="bg-white p-4 rounded-3 shadow-sm mb-5">
-                    <div id="stepper" class="stepper">
-                        @php
-                            $stageNames = ['Registro','Documentación','Doc. de Informes','Ejecución','Informes','Finalización'];
-                            $maxStage = isset($practicas->state) ? min(intval($practicas->state), 6) : 1;
-                        @endphp
+                <div id="stepper" class="stepper">
+                    @php
+                        $stageNames = ['Registro','Documentación','Doc. de Informes','Ejecución','Informes','Finalización'];
+                        $maxStage = isset($practicas->state) ? min(intval($practicas->state), 5) : 1;
+                    @endphp
 
-                        @for ($k = 1; $k <= 6; $k++)
-                            @php
-                                if ($k < $maxStage) {
-                                    $cls = 'stepper-item completed';
-                                } elseif ($k == $maxStage) {
-                                    $cls = 'stepper-item current';
-                                } else {
-                                    $cls = 'stepper-item locked';
-                                }
-                            @endphp
-                            <div class="{{ $cls }}" data-stage="{{ $k }}" @if($k <= $maxStage) onclick="navigateToStage({{ $k }})" @endif>
-                                <div class="stepper-circle">
-                                    @if($k < $maxStage)
-                                        <i class="fas fa-check"></i>
-                                    @elseif($k == $maxStage)
-                                        {{ $k }}
-                                    @else
-                                        <i class="fas fa-lock"></i>
-                                    @endif
-                                </div>
-                                <span class="stepper-label">{{ $stageNames[$k-1] }}</span>
+                    @for ($k = 1; $k <= 5; $k++)
+                        @php
+                            if ($k < $maxStage) {
+                                $cls = 'stepper-item completed';
+                            } elseif ($k == $maxStage) {
+                                $cls = 'stepper-item current';
+                            } else {
+                                $cls = 'stepper-item locked';
+                            }
+                        @endphp
+                        <div class="{{ $cls }}" data-stage="{{ $k }}" @if($k <= $maxStage) onclick="navigateToStage({{ $k }})" @endif>
+                            <div class="stepper-circle">
+                                @if($k < $maxStage)
+                                    <i class="fas fa-check"></i>
+                                @elseif($k == $maxStage)
+                                    {{ $k }}
+                                @else
+                                    <i class="fas fa-lock"></i>
+                                @endif
                             </div>
-                        @endfor
+                            <span class="stepper-label">{{ $stageNames[$k-1] }}</span>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+
+            {{-- Incluir los partials desbloqueados y envolverlos para mostrar/ocultar por JS --}}
+            @for ($i = 1; $i <= $maxStage; $i++)
+                <div id="stage-content-{{ $i }}" class="stage-content" style="display: {{ $i == $maxStage ? 'block' : 'none' }};">
+                    @includeIf('practicas.estudiante.desarrollo.est_des_'.$i)
+                </div>
+            @endfor
+
+            @if ($practicas->state >= 5 && ($practicas->estado_proceso ?? '') === 'completo')
+                <div class="alert alert-success mt-4" id="completionAlert">
+                    <div class="text-center">
+                        <i class="bi bi-check-circle" style="font-size: 3rem; color: #16a34a;"></i>
+                        <h4 class="mt-3 mb-3">¡Felicitaciones!</h4>
+                        <p class="mb-0">
+                            Has completado exitosamente todas las etapas de tus prácticas pre-profesionales. Tu proceso ha sido aprobado.
+                        </p>
                     </div>
                 </div>
-
-                @php $maxStage = isset($practicas->state) ? min(intval($practicas->state), 6) : 1; @endphp
-
-                {{-- Incluir los partials desbloqueados y envolverlos para mostrar/ocultar por JS --}}
-                @for ($i = 1; $i <= $maxStage; $i++)
-                    <div id="stage-content-{{ $i }}" class="stage-content" style="display: {{ $i == $maxStage ? 'block' : 'none' }};">
-                        @includeIf('practicas.estudiante.desarrollo.est_des_'.$i)
+            @endif
+                    
+    </div>
+    <!-- Modal Formulario -->
+<div class="modal fade" id="archivoModal" tabindex="-1" aria-labelledby="archivoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Formulario de...</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="approved-file-container" style="display: none;">
+                    <div class="alert alert-success text-center">
+                        <i class="bi bi-clipboard-check" style="font-size: 2rem;"></i>
+                        <h5 class="alert-heading mt-2">Aprobado el Archivo</h5>
+                        <p>El docente ya revisó y ha aprobado este anexo. No es posible modificarlo.</p>
                     </div>
-                @endfor
-
-                @if ($practicas->state >= 5 && ($practicas->estado_proceso ?? '') === 'completo')
-                    <div class="alert alert-success mt-4" id="completionAlert">
-                        <div class="text-center">
-                            <i class="bi bi-check-circle" style="font-size: 3rem; color: #16a34a;"></i>
-                            <h4 class="mt-3 mb-3">¡Felicitaciones!</h4>
-                            <p class="mb-0">
-                                Has completado exitosamente todas las etapas de tus prácticas pre-profesionales. Tu proceso ha sido aprobado.
-                            </p>
+                    <div class="d-flex flex-column">
+                        <label class="font-weight-bold"><i class="bi bi-paperclip"></i> Archivo aprobado:</label>
+                        <div class="alert alert-light p-2 d-flex justify-content-between align-items-center border flex-grow-1">
+                            <span class="text-truncate"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Anexo_7_Estudiante.pdf</span>
+                            <a href="#" id="approved-ruta" class="btn btn-sm btn-outline-primary flex-shrink-0 ms-2" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Ver</a>
                         </div>
                     </div>
-                @endif
-
+                </div>
+                <div id="pending-review-container" style="display: none;">
+                    <div class="alert alert-info text-center">
+                        <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                        <h5 class="alert-heading mt-2">Enviado para Revisión</h5>
+                        <p>Ya has enviado este anexo. El docente lo está revisando.</p>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <label class="font-weight-bold"><i class="bi bi-paperclip"></i> Archivo enviado:</label>
+                        <div class="alert alert-light p-2 d-flex justify-content-between align-items-center border flex-grow-1">
+                            <span class="text-truncate"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Anexo_7_Estudiante.pdf</span>
+                            <a href="#" id="pending-ruta" class="btn btn-sm btn-outline-primary flex-shrink-0 ms-2" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Ver</a>
+                        </div>
+                    </div>
+                </div>
+                <form id="submission-form" action="{{ route('subir.documento') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" id="practica" name="practica" value="{{ $practicas->id }}">
+                    <input type="hidden" id="tipo" name="tipo">
+                    <div class="mb-3" id="archivoAnexo">
+                        <label class="form-label">
+                            <i class="bi bi-file-pdf"></i>
+                            Anexo # (PDF)
+                        </label>
+                        <input type="file" name="archivo" class="form-control" accept="application/pdf"
+                            onchange="validateFileSize(this, 10)">
+                        <small class="text-muted">Archivo PDF, máximo 10MB</small>
+                    </div>
+                    <div class="mb-3 d-flex justify-content-between gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-primary" id="saveEvaluation">Guardar</button>
+                    </div>
+                </form>
+                <div class="history-container mb-3" id="history-container" style="display: none;">
+                    <h6 class="mt-4">Documentos enviados (Historial)</h6>
+                    <ul class="list-group history-list" id="archivosEnviadosList">
+                        <!-- Los elementos de la lista se agregarán dinámicamente aquí -->
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 </div>
 
 <style>
@@ -304,143 +367,255 @@
     });
 </script>
 @endif
+<script>
+    // Allowed stage viene del servidor
+    const allowedStage = @json(isset($practicas->state) ? min(intval($practicas->state), 6) : 1);
 
-    <script>
-        // Allowed stage viene del servidor
-        const allowedStage = @json(isset($practicas->state) ? min(intval($practicas->state), 6) : 1);
+    // Actualiza visual del stepper y muestra el contenido del stage seleccionado
+    async function navigateToStage(stageId) {
+        if (!stageId || stageId < 1) return;
 
-        // Actualiza visual del stepper y muestra el contenido del stage seleccionado
-        async function navigateToStage(stageId) {
-            if (!stageId || stageId < 1) return;
-
-            if (stageId > allowedStage) {
-                console.error('Etapa bloqueada o no clickeable.');
-                return;
-            }
-
-            // 1. Actualiza el estado de las etapas en el DOM
-            document.querySelectorAll('.stepper-item').forEach(item => {
-                const currentId = parseInt(item.getAttribute('data-stage'));
-                item.classList.remove('current', 'completed', 'locked');
-
-                const circle = item.querySelector('.stepper-circle');
-
-                if (currentId < stageId) {
-                    item.classList.add('completed');
-                    if (circle) circle.innerHTML = '<i class="fas fa-check"></i>';
-                } else if (currentId === stageId) {
-                    item.classList.add('current');
-                    if (circle) circle.innerHTML = currentId;
-                } else {
-                    // Si es mayor al seleccionado
-                    if (currentId <= allowedStage) {
-                        // Está desbloqueado pero es futuro visualmente
-                        item.classList.add('completed'); // Usamos estilo completed pero sin check
-                        if (circle) circle.innerHTML = currentId;
-                    } else {
-                        // Realmente bloqueado
-                        item.classList.add('locked');
-                        if (circle) circle.innerHTML = '<i class="fas fa-lock"></i>';
-                    }
-                }
-            });
-
-            // 2. Actualiza el título de la etapa
-            const stageNames = ['Primera','Segunda','Tercera','Cuarta','Quinta','Sexta'];
-            const stageLabels = ['Registro','Documentación','Doc. de Informes','Ejecución','Informes','Finalización'];
-            const stageTitle = stageNames[stageId - 1] || '';
-            const stageName = stageLabels[stageId - 1] || '';
-            const titleEl = document.getElementById('current-stage-title');
-            if (titleEl) titleEl.textContent = `${stageTitle} Etapa - ${stageName}`;
-            const subtitleEl = document.getElementById('subtitle');
-            if (subtitleEl) subtitleEl.textContent = `${stageTitle} Etapa - ${stageName}`;
-
-            // 3. Mostrar/ocultar los contenidos de las etapas
-            document.querySelectorAll('.stage-content').forEach(container => {
-                const id = container.id.replace('stage-content-','');
-                if (parseInt(id) === stageId) {
-                    container.style.display = 'block';
-                } else {
-                    container.style.display = 'none';
-                }
-            });
-
-            const ID_PRACTICA = {{ $practicas->id }};
-
-            // Minimal stage configuration for now (only stage 1)
-            const stageConfig = {
-                1: {
-                    id: 1,
-                    name: 'Empresa y Jefe Inmediato',
-                    // summary endpoints (return small objects used to fill the cards)
-                    summaryEndpoints: [
-                        (pr) => `/api/empresa/${pr}`,
-                        (pr) => `/api/jefeinmediato/${pr}`,
-                    ],
-                    // detail endpoints can be added later for modal editing
-                    detailEndpoints: {
-                        empresa: (pr) => `/api/empresa/${pr}/detail`,
-                        jefe: (pr) => `/api/jefeinmediato/${pr}/detail`,
-                    }
-                },
-                2: {
-                    id: 1,
-                    name: 'Fut y Carta',
-                    summaryEndpoints:[
-                        (pr) => `api/archivos/${pr}`,
-                        (pr) => `api/archivos/${pr}`
-                    ]
-                }
-            };
-            if(stageId === 1) {
-                console.log('Entrando a Etapa 1: carga lazy de Empresa y Jefe Inmediato');
-                try {
-                    const resEmpresa = await fetch(`/api/empresa/${ID_PRACTICA}`);
-                    if (resEmpresa.ok) {
-                        const empresaData = await resEmpresa.json();
-                        console.log('empresa:', empresaData);
-                    } else {
-                        console.warn('API /api/empresa returned', resEmpresa.status);
-                    }
-                } catch (err) {
-                    console.error('Error fetch /api/empresa', err);
-                }
-
-            } else if(stageId === 2) {
-                console.log('Hello AQUI STATE 2');
-                try {
-                    const type_fut = "fut";
-                    const resFut = await fetch(`/api/documento/${ID_PRACTICA}/${type_fut}`);
-                    if(resFut.ok) {
-                        const data = await resFut.json();
-                        console.log('fut: ', data);
-
-                        if(data != null) {
-                            document.getElementById('status-progress-or-rejected').style.display='block';
-                            document.getElementById('view-file-fut').href = `/${data.ruta}`;
-                            document.getElementById('btn-upload-fut').style.display='none';
-                        } else {
-                            document.getElementById('btn-upload-fut').style.display='block';
-                        }
-                    }else {
-                        console.warn('API /api/empresa returned', resFut.status);
-                    }
-                } catch (err) {
-                    console.error('Error fetch /api/empresa', err);
-                 }
-            }
-            console.log(`Navegando a la Etapa ${stageId}: ${stageName}`);
+        if (stageId > allowedStage) {
+            console.error('Etapa bloqueada o no clickeable.');
+            return;
         }
 
+        // 1. Actualiza el estado de las etapas en el DOM
+        document.querySelectorAll('.stepper-item').forEach(item => {
+            const currentId = parseInt(item.getAttribute('data-stage'));
+            item.classList.remove('current', 'completed', 'locked');
 
+            const circle = item.querySelector('.stepper-circle');
 
-        // Inicializar con la etapa máxima permitida por servidor (estado actual)
-        document.addEventListener('DOMContentLoaded', function () {
-            try {
-                navigateToStage(allowedStage);
-            } catch (e) {
-                console.error(e);
+            if (currentId < stageId) {
+                item.classList.add('completed');
+                if (circle) circle.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (currentId === stageId) {
+                item.classList.add('current');
+                if (circle) circle.innerHTML = currentId;
+            } else {
+                // Si es mayor al seleccionado
+                if (currentId <= allowedStage) {
+                    // Está desbloqueado pero es futuro visualmente
+                    item.classList.add('completed'); // Usamos estilo completed pero sin check
+                    if (circle) circle.innerHTML = currentId;
+                } else {
+                    // Realmente bloqueado
+                    item.classList.add('locked');
+                    if (circle) circle.innerHTML = '<i class="fas fa-lock"></i>';
+                }
             }
         });
-    </script>
+
+        // 2. Actualiza el título de la etapa
+        const stageNames = ['Primera','Segunda','Tercera','Cuarta','Quinta','Sexta'];
+        const stageLabels = ['Registro','Documentación','Doc. de Informes','Ejecución','Informes','Finalización'];
+        const stageTitle = stageNames[stageId - 1] || '';
+        const stageName = stageLabels[stageId - 1] || '';
+        const titleEl = document.getElementById('current-stage-title');
+        if (titleEl) titleEl.textContent = `${stageTitle} Etapa - ${stageName}`;
+        const subtitleEl = document.getElementById('subtitle');
+        if (subtitleEl) subtitleEl.textContent = `${stageTitle} Etapa - ${stageName}`;
+
+        // 3. Mostrar/ocultar los contenidos de las etapas
+        document.querySelectorAll('.stage-content').forEach(container => {
+            const id = container.id.replace('stage-content-','');
+            if (parseInt(id) === stageId) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        });
+
+        const ID_PRACTICA = {{ $practicas->id }};
+
+        // Minimal stage configuration for now (only stage 1)
+        const stageConfig = {
+            1: {
+                id: 1,
+                name: 'Empresa y Jefe Inmediato',
+                // summary endpoints (return small objects used to fill the cards)
+                summaryEndpoints: [
+                    (pr) => `/api/empresa/${pr}`,
+                    (pr) => `/api/jefeinmediato/${pr}`,
+                ],
+                // detail endpoints can be added later for modal editing
+                detailEndpoints: {
+                    empresa: (pr) => `/api/empresa/${pr}/detail`,
+                    jefe: (pr) => `/api/jefeinmediato/${pr}/detail`,
+                }
+            },
+            2: {
+                id: 1,
+                name: 'Fut y Carta',
+                summaryEndpoints:[
+                    (pr) => `api/archivos/${pr}`,
+                    (pr) => `api/archivos/${pr}`
+                ]
+            }
+        };
+        if(stageId === 1) {
+            console.log('Entrando a Etapa 1: carga lazy de Empresa y Jefe Inmediato');
+            try {
+                const resEmpresa = await fetch(`/api/empresa/${ID_PRACTICA}`);
+                if (resEmpresa.ok) {
+                    const empresaData = await resEmpresa.json();
+                    console.log('empresa:', empresaData);
+                } else {
+                    console.warn('API /api/empresa returned', resEmpresa.status);
+                }
+            } catch (err) {
+                console.error('Error fetch /api/empresa', err);
+            }
+
+        } else if(stageId === 2) {
+            console.log('Hello AQUI STATE 2');
+            try {
+                const type_fut = "fut";
+                const resFut = await fetch(`/api/documento/${ID_PRACTICA}/${type_fut}`);
+                if(resFut.ok) {
+                    const data = await resFut.json();
+                    console.log('fut: ', data[0]);
+
+                    if(data != null) {
+                        document.getElementById('status-file-fut').textContent = data[0].estado_archivo;
+                    } else {
+                        document.getElementById('btn-upload-fut').style.display='block';
+                    }
+                }else {
+                    console.warn('API /api/empresa returned', resFut.status);
+                }
+            } catch (err) {
+                console.error('Error fetch /api/empresa', err);
+                }
+        }
+        console.log(`Navegando a la Etapa ${stageId}: ${stageName}`);
+    }
+
+    // Inicializar con la etapa máxima permitida por servidor (estado actual)
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            navigateToStage(allowedStage);
+        } catch (e) {
+            console.error(e);
+        }
+    });
+
+
+    const archivoButtons = document.querySelectorAll('.btn-view-archivo');
+    const modalElement = document.getElementById('archivoModal');
+    const modal = new bootstrap.Modal(modalElement);
+
+    // Contenedores del modal (los definimos fuera para mejor acceso)
+    const approvedFileContainer = document.getElementById('approved-file-container');
+    const pendingReviewContainer = document.getElementById('pending-review-container');
+    const formContainer = document.getElementById('submission-form');
+    const historyContainer = document.getElementById('history-container');
+
+    // Opcional: Agregar un contenedor de carga (spinner) al modal para UX
+    // const loadingContainer = document.getElementById('loading-spinner'); 
+
+    archivoButtons.forEach(button => {
+        button.addEventListener('click', async function (event) {
+            event.preventDefault();
+            
+            approvedFileContainer.style.display = 'none';
+            pendingReviewContainer.style.display = 'none';
+            formContainer.style.display = 'none';
+            historyContainer.style.display = 'none';
+
+            // Opcional: Mostrar un indicador de carga (spinner)
+            // if (loadingContainer) loadingContainer.style.display = 'block';
+
+            // Mostrar el modal inmediatamente (ahora está "limpio" o "en carga")
+            modal.show();
+
+            // ----------------------------------------------
+            const ID_PRACTICA = {{ $practicas->id }};
+            const type = this.getAttribute('data-type');
+
+            try {
+                const response = await fetch(`/api/documento/${ID_PRACTICA}/${type}`);
+
+                // Opcional: Ocultar el indicador de carga al recibir respuesta
+                // if (loadingContainer) loadingContainer.style.display = 'none'; 
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('data ', data);
+                    
+                    // --- 🔄 PASO 2: ACTUALIZACIÓN CON DATOS ---
+                    if(data != null && data.length > 0) { // Usar data.length > 0 es más seguro
+                        const ldata = data[0];
+
+                        if (ldata.estado_archivo === 'Enviado') {
+                            // Usé 'Aprobar' para ambos, ya que tu código original tenía la misma lógica de display
+                            approvedFileContainer.style.display = 'none'; // Se mantiene el 'none'
+                            pendingReviewContainer.style.display = 'block';
+                            formContainer.style.display = 'none';
+                            document.getElementById('pending-ruta').href = ldata.ruta;
+                        } else if (ldata.estado_archivo === 'Aprobado') {
+                            approvedFileContainer.style.display = 'block';
+                            pendingReviewContainer.style.display = 'none';
+                            formContainer.style.display = 'none';
+                            document.getElementById('approved-ruta').href = ldata.ruta;
+                        } else if (ldata.estado_archivo === 'Corregir') {
+                            formContainer.style.display = 'block';
+                            approvedFileContainer.style.display = 'none';
+                            pendingReviewContainer.style.display = 'none';
+
+                            document.getElementById('tipo').value = type;
+                        }
+
+                        if(data.length > 1) { // Usa length sin paréntesis
+                            historyContainer.style.display = 'block';
+                            const historyList = document.getElementById('archivosEnviadosList');
+                            historyList.innerHTML = '';
+                            
+                            // a partir del segundo elemento
+                            data.forEach((item, index) => {
+                                if(index > 0) {
+                                    const li = document.createElement('li');
+                                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                                    li.innerHTML = `
+                                    <span>${new Date(item.created_at).toLocaleString()}</span>
+                                    <span>${item.estado_archivo}</span>
+                                    <a href="${item.ruta}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-box-arrow-up-right"></i> Ver</a>
+                                `;
+                                    historyList.appendChild(li);
+                                }
+                            });
+                        }
+                    } else {
+                        // Si no hay datos, mostrar el formulario de envío
+                        formContainer.style.display = 'block';
+                        approvedFileContainer.style.display = 'none';
+                        pendingReviewContainer.style.display = 'none';
+                        historyContainer.style.display = 'none';
+
+                        document.getElementById('tipo').value = type;
+                    }
+                } else {
+                    console.warn('API /api/documento returned', response.status);
+                }
+            } catch (err) {
+                // Opcional: Ocultar el indicador de carga en caso de error
+                // if (loadingContainer) loadingContainer.style.display = 'none'; 
+                console.error('Error fetch /api/documento', err);
+            }
+
+            // Ya no necesitas 'modal.show()' aquí, lo movimos al inicio para UX.
+        });
+    });
+
+    // ruta dinamica de type de archivo
+    const routeUrls = {
+        'fut': '{{ route('store.fut') }}',
+        'cp': '{{ route('store.cartapresentacion') }}'
+    }
+
+    function getRouteUrl(type) {
+        return routeUrls[type] || '';
+    }
+</script>
 @endpush

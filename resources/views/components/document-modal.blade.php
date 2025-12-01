@@ -28,9 +28,7 @@
                     <i class="bi bi-{{ $icon }}"></i>
                     {{ $title }} HOLA 2025
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
             <div class="modal-body">

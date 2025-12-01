@@ -217,10 +217,6 @@ class ArchivoController extends Controller
             'modulo' => 'required|integer|min:1',
             //'anexo' => 'required|file|mimes:pdf|max:20480',
         ]);
-
-        Log::info('Subiendo anexo para AP ID: ' . $request->ap_id . ' Tipo: ' . $request->number);
-        Log::info('Ruta Anexo: ' . $request->rutaAnexo);
-        Log::info('Modulo: ' . $request->modulo);
         $id_ap = $request->ap_id;
         $number = $request->number;
 
@@ -229,8 +225,6 @@ class ArchivoController extends Controller
         if (!$evaluacionPractica) {
             return back()->with('error', 'No se encontró la evaluación práctica para el AP ID: ' . $id_ap . ' y el módulo: ' . $request->modulo);
         }
-
-        Log::info('evaluacionPractica: ' . json_encode($evaluacionPractica));
 
         /*$evaluacionPractica = EvaluacionPractica::firstOrCreate(
             ['id_ap' => $id_ap],
@@ -273,6 +267,117 @@ class ArchivoController extends Controller
         ]);
 
         return back()->with('success', 'Anexo subido correctamente.');
+    }
+
+    public function subirDocumentoPractica(Request $request) {
+        $rutas = [
+            'fut' => 'futs',
+            'carta_presentacion' => 'carta_presentacion',
+            'carta_aceptacion' => 'carta_aceptacion'
+        ];
+
+        $request->validate([
+            'practica' => 'required|exists:practicas,id',
+            'tipo' => 'required|in:' . implode(',', array_keys($rutas)),
+            'archivo' => 'required|file|mimes:pdf|max:20480',
+        ]);
+
+        $practica = Practica::findOrFail($request->practica);
+
+        
+        $file = $request->file('archivo');
+        $nombre = $request->tipo . '_' . $practica->id_ap . '_' . time() . '.pdf';
+        $ruta = $file->storeAs($rutas[$request->tipo], $nombre, 'public');
+        $rutaCompleta = 'storage/' . $ruta;
+
+        Archivo::create([
+            'archivo_id' => $practica->id,
+            'archivo_type' => Practica::class,
+            'estado_archivo' => 'Enviado',
+            'tipo' => $request->tipo,
+            'ruta' => $rutaCompleta,
+            'comentario' => null,
+            'subido_por_user_id' => $practica->id_ap,
+            'state' => 1
+        ]);
+
+        return back()->with('success', 'Documento subido correctamente.');
+    }
+
+    public function actualizarEstadoArchivo(Request $request) {
+        // Array to string conversion
+        //Log::info('Actualizando estado de archivo: ' . json_encode($request->all()));
+
+        $archivo = Archivo::findOrFail($request->id);
+        $archivo->estado_archivo = $request->estado;
+        $archivo->save();
+        //Log::info('Archivo encontrado: ' . json_encode($archivo));
+
+        // --- Lógica para avanzar de etapa automáticamente ---
+        if ($request->estado === 'Aprobado' && $archivo->archivo_type === Practica::class) {
+            $practica = Practica::find($archivo->archivo_id);
+            
+            if ($practica) {
+                $currentState = intval($practica->state);
+                $tipoPractica = $practica->tipo_practica; // 'desarrollo' o 'convalidacion'
+                $allApproved = false;
+
+                // Definir documentos requeridos por etapa y tipo
+                $requiredDocs = [];
+
+                if ($currentState == 2) {
+                    if ($tipoPractica == 'desarrollo') {
+                        $requiredDocs = ['fut', 'carta_presentacion'];
+                    } elseif ($tipoPractica == 'convalidacion') {
+                        $requiredDocs = ['fut', 'carta_aceptacion'];
+                    }
+                } elseif ($currentState == 3) {
+                    if ($tipoPractica == 'desarrollo') {
+                        $requiredDocs = ['carta_aceptacion', 'plan_actividades'];
+                    } elseif ($tipoPractica == 'convalidacion') {
+                        $requiredDocs = ['registro_actividades', 'control_actividades'];
+                    }
+                } elseif ($currentState == 4) {
+                    $requiredDocs = ['constancia_cumplimiento', 'informe_final'];
+                }
+
+                if (!empty($requiredDocs)) {
+                    // Verificar si TODOS los documentos requeridos tienen al menos un archivo con estado 'Aprobado'
+                    $approvedCount = 0;
+                    foreach ($requiredDocs as $docType) {
+                        $hasApproved = Archivo::where('archivo_type', Practica::class)
+                            ->where('archivo_id', $practica->id)
+                            ->where('tipo', $docType)
+                            ->where('estado_archivo', 'Aprobado')
+                            ->exists();
+                        
+                        if ($hasApproved) {
+                            $approvedCount++;
+                        }
+                    }
+
+                    if ($approvedCount === count($requiredDocs)) {
+                        $allApproved = true;
+                    }
+                }
+
+                // Si todos están aprobados, avanzar etapa
+                if ($allApproved) {
+                    // Avanzar estado (sin pasar de 5, asumiendo 5 es completado final)
+                    $practica->state = min(5, $currentState + 1);
+                    
+                    if ($practica->state == 5) {
+                        $practica->estado_practica = 'completo';
+                    }
+                    
+                    $practica->save();
+                    
+                    return back()->with('success', 'Estado de archivo actualizado y etapa completada.');
+                }
+            }
+        }
+
+        return back()->with('success', 'Estado de archivo actualizado correctamente.');
     }
 
     public function actualizarEstadoAnexo(Request $request)
@@ -358,18 +463,13 @@ class ArchivoController extends Controller
     }
 
     public function getDocumentoPractica($practica, $type) {
-        Log::info('Buscando documentos de práctica', ['practica' => $practica, 'type' => $type]);
-
-        // Buscamos en la tabla archivos los registros asociados a la práctica
-        // que coincidan con el tipo solicitado. Se asume que para archivos de
-        // práctica `archivo_type` contiene la clase Practica::class y
-        // `archivo_id` es el id de la práctica.
         try {
             $archivos = Archivo::where('archivo_type', Practica::class)
                 ->where('archivo_id', $practica)
                 ->where('tipo', $type)
-                ->select('id', 'estado_archivo', 'ruta')
-                ->first();
+                ->select('id', 'estado_archivo', 'ruta', 'created_at')
+                ->latest() // <-- Alternativa para ordenar por created_at DESC
+                ->get();
 
             return response()->json($archivos);
         } catch (\Exception $e) {
