@@ -12,14 +12,14 @@ class Respuesta extends Model
     public $timestamps = false;
 
     protected $fillable = [
-    'persona_id',
+    'id_persona',
     'pregunta_id',
     'respuesta',
     'user_create',
     'user_update',
     'date_create',
     'date_update',
-    'estado',
+    'state',
 ];
 
     public function persona()

@@ -411,7 +411,7 @@
                             <i class="bi bi-award final-document-icon"></i>
                             <div class="final-document-details">
                                 <h5>Constancia de Cumplimiento</h5>
-                                <a href="" target="_blank" class="btn-ver-pdf-e4 constancia" id="btn-ruta-constancia-cumplimiento">
+                                <a href="#" class="btn-ver-pdf-e4 constancia btn-review-doc" id="btn-ruta-constancia-cumplimiento" data-doctype="constancia_cumplimiento">
                                     <i class="bi bi-file-pdf"></i>
                                     Ver PDF
                                 </a>
@@ -427,7 +427,7 @@
                             <i class="bi bi-file-earmark-text final-document-icon"></i>
                             <div class="final-document-details">
                                 <h5>Informe Final de PPP</h5>
-                                <a href="" target="_blank" class="btn-ver-pdf-e4 informe-final" id="btn-ruta-informe-final">
+                                <a href="#" class="btn-ver-pdf-e4 informe-final btn-review-doc" id="btn-ruta-informe-final" data-doctype="informe_final_ppp">
                                     <i class="bi bi-file-pdf"></i>
                                     Ver PDF
                                 </a>

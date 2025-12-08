@@ -8,40 +8,31 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Persona;
 use App\Models\asignacion_persona;
 use App\Models\Escuela;
+use App\Models\Matricula;
+use App\Models\Archivo;
+use App\Models\grupo_estudiante;
+use App\Models\grupo_practica;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
 
 
 class DashboardDocenteController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         
-    $user_id = Auth::id(); // ID del docente autenticado
-    $docenteEmail = User::findOrFail($user_id)->name;
-    $docenteId = Persona::where('codigo', $docenteEmail)->value('id');
-    Log::info('ID del docente autenticado: ' . $docenteId);
+    $id_semestre = session('semestre_actual_id');
+    $authUser = auth()->user();
+
+    $ap_now = $authUser->persona->asignacion_persona;
     
-    $escuelaId = $request->get('escuela');
     $facultades = DB::table('facultades')->get();
 
-    $semestreCodigo = $request->get('semestre');
-    $supervisorId = $request->get('supervisor');
+    
+    $id_escuela = $ap_now->seccion_academica->id_escuela;
 
-    $semestreActivoId = session('semestre_actual_id');
-    Log::info('ID del semestre actual: ' . $semestreActivoId);
-
-
-    // Obtener la asignación principal del docente para el semestre actual
-    $asignacionDocente = asignacion_persona::where('id_persona', $docenteId)
-        ->where('id_semestre', $semestreActivoId)
-        ->first();
-    $escuelaIdDocente = $asignacionDocente ? $asignacionDocente->id_escuela : null;
- 
-    // Obtener la escuela con el id_escuela en la tabla asignacion_persona que contiene el id_persona igual al docente autenticado
-    $id_escuela = asignacion_persona::where('id_persona', $docenteId)
-        ->where('id_semestre', $semestreActivoId)
-        ->value('id_escuela');
+    $escuelaIdDocente = $id_escuela;
+    
     $escuelas = Escuela::where('id', $id_escuela)
     ->select('id', 'name')
     ->get();
@@ -49,21 +40,14 @@ class DashboardDocenteController extends Controller
     Log::info('ID de la escuela del docente: ' . $id_escuela);
 
 
-
-
-    /*$escuelas = DB::table('grupos_practicas as gp') 
-        ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
-        ->where('gp.id_docente', $docenteId)
-        ->select('e.id', 'e.name')
-        ->distinct()
-        ->get();*/
-
     // Base query filtrada por los valores seleccionados
-    $baseQuery = DB::table('grupo_estudiante as ge')
-        ->join('grupos_practicas as gp', 'ge.id_grupo_practica', '=', 'gp.id')
-        ->where('gp.id_docente', $docenteId);
+    // 1. Inicia en asignacion_persona (que es la tabla principal del modelo)
+    $baseQuery = asignacion_persona::where('asignacion_persona.id_semestre', $id_semestre)
+        ->where('asignacion_persona.id_sa', $ap_now->id_sa)
+        ->join('seccion_academica as sa', 'sa.id', '=', 'asignacion_persona.id_sa'); // Agrega el join a SA
+        //->where('id_escuela', $id_escuela);
 
-    if ($escuelaId) {
+    /*if ($escuelaId) {
         $baseQuery->where('gp.id_escuela', $escuelaId);
     }
 
@@ -74,91 +58,91 @@ class DashboardDocenteController extends Controller
 
     if ($supervisorId) {
         $baseQuery->where('ge.id_supervisor', $supervisorId);
-    }
+    }*/
 
-    $totalEstudiantes = (clone $baseQuery)->distinct('ge.id_estudiante')->count('ge.id_estudiante');
+    $totalEstudiantes = (clone $baseQuery)->where('id_rol', 5)->count();
     //$totalGrupos = (clone $baseQuery)->distinct('gp.id')->count('gp.id');
-    $totalFichasValidadas = (clone $baseQuery)
-        ->join('matriculas as m', 'ge.id_estudiante', '=', 'm.persona_id')
-        ->where('m.estado_ficha', 'Completo')
-            ->where('m.estado_record', 'Completo')
-        ->count();
-    $totalSupervisores = (clone $baseQuery)->distinct('ge.id_supervisor')->count('ge.id_supervisor');
+    $asignacionesIds = (clone $baseQuery)->pluck('asignacion_persona.id');
 
+    $totalFichasValidadas = Matricula::whereIn('id_ap', $asignacionesIds)
+            ->where('estado_matricula', 'Completo')
+            ->count();
+    $totalSupervisores = asignacion_persona::where('id_rol', 4)
+                ->where('id_semestre', $id_semestre)
+                ->count('id_persona');
+
+    // 2. Clona y añade los joins faltantes y selecciona
     $estudiantesPorEscuela = (clone $baseQuery)
-        ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
-        ->select('e.name as escuela', DB::raw('COUNT(ge.id_estudiante) as total'))
+        ->join('escuelas as e', 'sa.id_escuela', '=', 'e.id') // 'sa' ya está definida en el join anterior
+        ->select('e.name as escuela', DB::raw('COUNT(asignacion_persona.id) as total'))
         ->groupBy('e.name')
         ->get();
 
     $estadoFichas = (clone $baseQuery)
-        ->join('matriculas as m', 'ge.id_estudiante', '=', 'm.persona_id')
-        ->select('m.estado_ficha', DB::raw('COUNT(*) as total'))
-        ->groupBy('m.estado_ficha')
+        ->join('matriculas as m', 'asignacion_persona.id', '=', 'm.id_ap')
+        ->select('m.estado_matricula', DB::raw('COUNT(*) as total'))
+        ->groupBy('m.estado_matricula')
         ->get();
 
     $groupsData = (clone $baseQuery)
-    ->join('semestres as sem', 'gp.id_semestre', '=', 'sem.id') // <-- alias diferente
-    ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
+    ->join('semestres as sem', 'asignacion_persona.id_semestre', '=', 'sem.id')
+    // Cambiamos el join para usar 'sa.id_escuela' en lugar de 'asignacion_persona.id_escuela'
+    ->join('escuelas as e', 'sa.id_escuela', '=', 'e.id') 
     ->select(
-        'gp.nombre_grupo as name',
+        'asignacion_persona.id as name',
         'e.name as school',
         'sem.codigo as semester',
-        DB::raw('COUNT(ge.id_estudiante) as students'),
-        DB::raw('IF(gp.estado = 1, "Activo", "Inactivo") as status')
+        DB::raw('COUNT(asignacion_persona.id) as students'),
+        DB::raw('IF(asignacion_persona.state = 1, "Activo", "Inactivo") as status')
     )
-    ->groupBy('gp.id', 'gp.nombre_grupo', 'e.name', 'sem.codigo', 'gp.estado')
+    ->groupBy('asignacion_persona.id', 'e.name', 'sem.codigo', 'asignacion_persona.state')
     ->get();
 
 
-    $fichasPorMes = (clone $baseQuery)
-        ->join('matriculas as m', 'ge.id_estudiante', '=', 'm.persona_id')
-        ->select(DB::raw('MONTHNAME(m.created_at) as mes'), DB::raw('COUNT(*) as total'))
-        ->whereYear('m.created_at', date('Y'))
-        ->groupBy(DB::raw('MONTH(m.created_at)'), DB::raw('MONTHNAME(m.created_at)'))
-        ->orderBy(DB::raw('MONTH(m.created_at)'))
+    $fichasPorMes = Archivo::select(
+            DB::raw('MONTHNAME(created_at) as mes'),
+            DB::raw('COUNT(*) as total')
+        )
+        ->where('archivo_type', 'ficha')
+        ->groupBy(DB::raw('MONTH(created_at)'), DB::raw('MONTHNAME(created_at)'))
+        ->orderBy(DB::raw('MONTH(created_at)'))
         ->get();
 
     $supervisoresRanking = (clone $baseQuery)
-        ->join('personas as p', 'ge.id_supervisor', '=', 'p.id')
-        ->select('p.nombres', DB::raw('COUNT(ge.id_estudiante) as total'))
+        ->join('personas as p', 'asignacion_persona.id_persona', '=', 'p.id')
+        ->select('p.nombres', DB::raw('COUNT(asignacion_persona.id) as total'))
         ->groupBy('p.nombres')
         ->orderByDesc('total')
         ->limit(5)
         ->get();
 
-        $chartData = (clone $baseQuery)
-    ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
-    ->join('semestres as sem', 'gp.id_semestre', '=', 'sem.id')
-    ->join('grupo_estudiante as sup', 'ge.id_supervisor', '=', 'sup.id')
-    ->join('users as usup', 'sup.id', '=', 'usup.id')
-    ->select(
-        'gp.nombre_grupo as grupo',
-        'usup.name as supervisor',
-        DB::raw('COUNT(ge.id_estudiante) as total')
+        /*$chartData = (clone $baseQuery)
+        ->join('personas as p', 'asignacion_persona.id_persona', '=', 'p.id')
+        ->join('grupos_practicas as gp', 'p.id', '=', 'gp.id_docente')
+        ->join('grupo_estudiante as ge', 'gp.id', '=', 'ge.id_grupo_practica')
+        ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
+        ->join('grupo_estudiante as sup', 'ge.id_supervisor', '=', 'sup.id')
+        ->join('users as usup', 'sup.id', '=', 'usup.id')
+        ->select(
+            'gp.nombre_grupo as grupo',
+            'usup.name as supervisor',
+            DB::raw('COUNT(ge.id_estudiante) as total')
+        )
+        ->groupBy('gp.nombre_grupo', 'usup.name')
+        ->get();*/
+    $chartData = grupo_practica::
+    select(
+        'name as grupo',
+        'id_docente as supervisor', // Columna no agregada
+        DB::raw('COUNT(id) as total')
     )
-    ->groupBy('gp.nombre_grupo', 'usup.name')
+    ->groupBy('name', 'id_docente') // ¡CORRECCIÓN: Incluir id_docente aquí!
     ->get();
 
-    $listaEstudiantes = (clone $baseQuery)
-    ->join('personas as p', 'ge.id_estudiante', '=', 'p.id')
-    ->join('escuelas as e', 'gp.id_escuela', '=', 'e.id')
-    ->join('facultades as f', 'e.facultad_id', '=', 'f.id')
-    ->join('semestres as sem', 'gp.id_semestre', '=', 'sem.id') // alias cambiado
-    ->leftJoin('matriculas as m', 'ge.id_estudiante', '=', 'm.persona_id')
-    ->select(
-        'p.nombres',
-        'p.apellidos',
-        'e.name as escuela',
-        'f.name as facultad',
-        'sem.codigo as semestre', // alias actualizado
-        DB::raw("COALESCE(m.estado_ficha, 'Sin registrar') as estado_ficha"),
-        DB::raw("COALESCE(m.estado_record, 'Sin registrar') as estado_record")
-    )
-    ->groupBy(
-        'p.nombres', 'p.apellidos', 'e.name', 'f.name', 'sem.codigo', 'm.estado_ficha', 'm.estado_record'
-    )
-    ->get();
+    $listaEstudiantes = Matricula::whereHas('asignacion_persona', function ($query) use ($baseQuery) {
+            // Especificamos 'asignacion_persona.id' para resolver la ambigüedad
+            $query->whereIn('id', (clone $baseQuery)->pluck('asignacion_persona.id')); 
+        })->with('asignacion_persona.persona', 'asignacion_persona.semestre', 'asignacion_persona.seccion_academica.escuela', 'asignacion_persona.seccion_academica.facultad')->get();
 
 
 

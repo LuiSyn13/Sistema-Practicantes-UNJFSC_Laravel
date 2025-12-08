@@ -17,11 +17,8 @@ return new class extends Migration
             
             $table->id();
             $table->string('name', 50);
-            $table->timestamp('date_create');
-            $table->dateTime('date_update')->nullable();
-            $table->boolean('estado')->default(true);
-
-
+            $table->timestamps();
+            $table->boolean('state')->default(true);
         });
     }
 

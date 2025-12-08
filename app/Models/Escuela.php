@@ -14,8 +14,25 @@ class Escuela extends Model
     }
     
 
-    protected $fillable = ['name', 'facultad_id', 'user_create', 'date_create'];
+    protected $fillable = [
+        'name', 
+        'facultad_id',
+        'state'
+    ];
     
+    /**
+     * Define la relación "una a muchas" con Seccion.
+     * Una Escuela puede tener muchas Secciones.
+     */
+    public function secciones()
+    {
+        return $this->hasMany(\App\Models\Seccion::class, 'id_escuela');
+    }
+
+    public function sa() {
+        return $this->hasMany(seccion_academica::class, 'id_escuela');
+    }
+
     public function escuela()
     {
         return $this->belongsTo(Escuela::class, 'id_escuela'); // o el nombre real de tu clave foránea

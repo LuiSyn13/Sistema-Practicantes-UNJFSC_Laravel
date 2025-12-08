@@ -18,13 +18,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('facultad_id');
-            $table->foreign('facultad_id')->references('id')->on('facultades')->onDelete('cascade');
-            $table->unsignedBigInteger('user_create')->nullable();
-            $table->timestamp('date_create')->nullable();
-            $table->timestamp('date_update')->nullable();
-            $table->boolean('estado')->default(true);
-
             $table->timestamps();
+            $table->boolean('state')->default(true);
+
+            $table->foreign('facultad_id')->references('id')->on('facultades')->onDelete('cascade');
         });
     }
 

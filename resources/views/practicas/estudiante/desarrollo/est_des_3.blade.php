@@ -17,6 +17,12 @@
                 </div>
                 <h5 class="text-primary font-weight-bold text-uppercase mb-3">Carta de Aceptación</h5>
                 <div id="cartaAceptacionStatus">
+                    <span id="status-file-cart" class="status-badge status-completed">Completo</span>
+                    <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                        data-type="carta_aceptacion"
+                        data-bs-target="#archivoModal">Visualizar</button>
+                </div>
+                <!--<div id="cartaAceptacionStatus">
                     @if ($practicaData->ruta_carta_aceptacion != null)
                         @if ($practicaData->estado_proceso === 'en proceso' || $practicaData->estado_proceso === 'rechazado')
                             <p class="text-muted mb-3">Visualiza o edita tu carta de aceptación</p>
@@ -40,7 +46,7 @@
                             <i class="bi bi-cloud-upload me-1"></i> Subir Documento
                         </button>
                     @endif
-                </div>
+                </div>-->
             </div>
         </div>
 
@@ -52,29 +58,10 @@
                 </div>
                 <h5 class="text-primary font-weight-bold text-uppercase mb-3">Plan de Actividades de las PPP</h5>
                 <div id="planActividadesStatus">
-                    @if ($practicaData->ruta_plan_actividades != null)
-                        @if ($practicaData->estado_proceso === 'en proceso' || $practicaData->estado_proceso === 'rechazado')
-                            <p class="text-muted mb-3">Visualiza o edita tu plan de actividades</p>
-                            <div class="d-flex flex-column gap-2 align-items-center">
-                                <a href="{{ asset($practicaData->ruta_plan_actividades) }}" target="_blank" class="btn btn-warning btn-sm">
-                                    <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                                </a>
-                                <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalPlanActividadesPPP">
-                                    <i class="bi bi-pencil-square me-1"></i> Editar Documento
-                                </button>
-                            </div>
-                        @elseif ($practicaData->estado_proceso === 'completo')
-                            <p class="text-muted mb-3">Visualiza tu plan de actividades aprobado</p>
-                            <a href="{{ asset($practicaData->ruta_plan_actividades) }}" target="_blank" class="btn btn-warning btn-sm">
-                                <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                            </a>
-                        @endif
-                    @else
-                        <p class="text-muted mb-3">Sube tu plan detallado de actividades</p>
-                        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalPlanActividadesPPP">
-                            <i class="bi bi-cloud-upload me-1"></i> Subir Documento
-                        </button>
-                    @endif
+                    <span id="status-file-plan" class="status-badge status-completed">Completo</span>
+                    <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                        data-type="plan_actividades_ppp"
+                        data-bs-target="#archivoModal">Visualizar</button>
                 </div>
             </div>
         </div>

@@ -33,7 +33,7 @@ class JefeInmediatoController extends Controller
     
                     if ($practica) {
                         // Busca el jefe inmediato asociado a la práctica
-                        $jefe = JefeInmediato::where('practicas_id', $practica->id)->first();
+                        $jefe = JefeInmediato::where('id_practica', $practica->id)->first();
     
                         if ($jefe && !$jefes->contains('id', $jefe->id)) {
                             // Agrega el jefe inmediato si no está ya en la colección
@@ -52,7 +52,7 @@ class JefeInmediatoController extends Controller
 
                 if ($practica) {
                     // Busca el jefe inmediato asociado a la práctica
-                    $jefe = JefeInmediato::where('practicas_id', $practica->id)->first();
+                    $jefe = JefeInmediato::where('id_practica', $practica->id)->first();
 
                     if ($jefe && !$jefes->contains('id', $jefe->id)) {
                         // Agrega el jefe inmediato si no está ya en la colección
@@ -89,8 +89,8 @@ class JefeInmediatoController extends Controller
             'telefono' => $validated['telefono'],
             'correo' => $validated['email'],
             'web' => $validated['sitio_web'] ?? null,
-            'practicas_id' => $practicas_id,
-            'estado' => 1,
+            'id_practica' => $practicas_id,
+            'state' => 1,
         ]);
 
         return redirect()->back()->with('success', 'Jefe Inmediato registrado exitosamente');
@@ -109,7 +109,7 @@ class JefeInmediatoController extends Controller
     public function update(Request $request, $id)
     {
         $jefeInmediato = JefeInmediato::findOrFail($id);
-        $practica = Practica::findOrFail($jefeInmediato->practicas_id);
+        $practica = Practica::findOrFail($jefeInmediato->id_practica);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -129,12 +129,12 @@ class JefeInmediatoController extends Controller
             'telefono' => $validated['telefono'],
             'correo' => $validated['email'],
             'web' => $validated['sitio_web'] ?? null,
-            'estado' => 1,
+            'state' => 1,
         ]);
 
         $practica->update([
-            'estado_proceso' => 'en proceso',
-            'estado' => 1,
+            'estado_practica' => 'en proceso',
+            'state' => 1,
         ]);
 
         return redirect()->back()->with('success', 'Jefe Inmediato actualizado exitosamente');
@@ -143,5 +143,12 @@ class JefeInmediatoController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    // API: obtener jefe inmediato por id_practica (para fetch desde frontend)
+    public function getJefeInmediato($practica)
+    {
+        $jefe = JefeInmediato::where('id_practica', $practica)->first();
+        return response()->json($jefe);
     }
 }

@@ -55,7 +55,7 @@
                                             trabajando en proyectos reales con tecnologías actuales.
                                         </p>
                                         <div class="d-grid">
-                                            <button class="btn btn-outline-primary btn-lg" onclick="seleccionarTipoPractica('desarrollo')">
+                                            <button class="btn btn-outline-primary btn-lg" onclick="selectPracticeType('desarrollo')">
                                                 <i class="bi bi-laptop me-2"></i>
                                                 Seleccionar Desarrollo
                                             </button>
@@ -77,7 +77,7 @@
                                             pre-profesional mediante documentación y evaluación.
                                         </p>
                                         <div class="d-grid">
-                                            <button class="btn btn-outline-primary btn-lg" onclick="seleccionarTipoPractica('convalidacion')">
+                                            <button class="btn btn-outline-primary btn-lg" onclick="selectPracticeType('convalidacion')">
                                                 <i class="bi bi-file-text me-2"></i>
                                                 Seleccionar Convalidación
                                             </button>

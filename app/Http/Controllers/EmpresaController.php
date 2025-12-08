@@ -9,6 +9,7 @@ use App\Models\Practica;
 use App\Models\grupos_practica;
 use App\Models\grupo_estudiante;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EmpresaController extends Controller
 {
@@ -89,8 +90,8 @@ class EmpresaController extends Controller
             'telefono' => $validated['telefono'],
             'correo' => $validated['email'],
             'sitio_web' => $validated['sitio_web'] ?? null,
-            'practicas_id' => $practicas_id,
-            'estado' => 1,
+            'id_practica' => $practicas_id,
+            'state' => 1,
             
         ]);
 
@@ -110,7 +111,7 @@ class EmpresaController extends Controller
     public function update(Request $request, $id)
     {
         $empresa = Empresa::findOrFail($id);
-        $practica = Practica::findOrFail($empresa->practicas_id);
+        $practica = Practica::findOrFail($empresa->id_practica);
         
         $validated = $request->validate([
             'empresa' => 'required|string|max:255',
@@ -122,6 +123,8 @@ class EmpresaController extends Controller
             'sitio_web' => 'nullable|url|max:255'
         ]);
 
+        Log::info('EMpresaa: '.$empresa);
+
         $empresa->update([
             'nombre' => $validated['empresa'],
             'ruc' => $validated['ruc'],
@@ -130,18 +133,25 @@ class EmpresaController extends Controller
             'telefono' => $validated['telefono'],
             'correo' => $validated['email'],
             'sitio_web' => $validated['sitio_web'] ?? null,
-            'estado' => 1,
+            'state' => 1,
         ]);
 
         $practica->update([
-            'estado_proceso' => 'en proceso',
+            'estado_practica' => 'en proceso',
         ]);
-
+        
         return redirect()->back()->with('success', 'Empresa actualizada exitosamente');
     }
 
     public function destroy($id)
     {
         //
+    }
+
+    public function getEmpresa($practica) {
+        $empresa = Empresa::where('id_practica', $practica)
+            ->select('id', 'state')
+            ->first();
+        return response()->json($empresa);
     }
 }

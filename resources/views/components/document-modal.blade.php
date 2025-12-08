@@ -26,11 +26,9 @@
             <div class="modal-header btn-{{ $bgClass }} text-white">
                 <h5 class="modal-title" id="{{ $modalId }}Label{{ $item->id }}">
                     <i class="bi bi-{{ $icon }}"></i>
-                    {{ $title }}
+                    {{ $title }} HOLA 2025
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
             <div class="modal-body">
@@ -53,38 +51,28 @@
                     </div>
                 @else
                     {{-- Bloque de formulario de corrección/revisión --}}
-                    @if($estado != 'Corregir')
+                    @if($estado == 'Enviado')
                         <form action="{{ $latestArchivo ? route($updateRoute, $latestArchivo->id) : route($updateRoute, $item->id) }}" method="POST">
                             @csrf
+                            <!-- input de ap_id -->
+                            <input type="hidden" name="ap_id" value="{{ $item->asignacion_persona->id }}">
                             <div class="form-group">
                                 <label for="estado-{{ $modalId }}-{{ $item->id }}" class="font-weight-bold">
                                     <i class="bi bi-gear"></i> Estado del Documento
                                 </label>
                                 <select name="{{ $estadoFieldName }}" id="estado-{{ $modalId }}-{{ $item->id }}" class="form-control">
-                                    {{-- Opciones para Carga Lectiva y Horario (estado_cl/estado_horario) --}}
-                                    @if (!$isArchivoModel)
-                                        <option value="En proceso" {{ ($estado ?? '') == 'En proceso' ? 'selected' : '' }}>En proceso</option>
-                                    @endif
-
-                                    {{-- Opciones para Resolución (estado_archivo) --}}
-                                    @if ($isArchivoModel)
-                                        <option value="Enviado" {{ ($estado ?? '') == 'Enviado' ? 'selected' : '' }}>Enviado</option>
-                                    @endif
-
-                                    <option value="Corregir" {{ $estado == 'Corregir' ? 'selected' : '' }}>Corregir</option>
-                                    <option value="Aprobado" {{ $estado == 'Aprobar' ? 'selected' : '' }}>Completo</option>
+                                    <option value="Enviado" {{ $estado == 'Enviado' ? 'selected' : '' }}>Enviado (Pendiente de Revisión)</option>
+                                    <option value="Aprobado">Aprobar</option>
+                                    <option value="Corregir">Corregir</option>
                                 </select>
                             </div>
 
-                            @if (!$isArchivoModel || $isArchivoModel)
-                                <div class="form-group mt-3">
-                                    <label for="comentario-{{ $modalId }}-{{ $item->id }}" class="font-weight-bold">
-                                        <i class="bi bi-chat-dots"></i> Comentario (Opcional)
-                                    </label>
-                                    {{-- Nota: El campo de comentario debería ser 'comentario_admin' si el historial lo usa, o 'comentario' si lo usa el controlador --}}
-                                    <textarea name="comentario" id="comentario-{{ $modalId }}-{{ $item->id }}" class="form-control" rows="3"></textarea>
-                                </div>
-                            @endif
+                            <div class="form-group mt-3">
+                                <label for="comentario-{{ $modalId }}-{{ $item->id }}" class="font-weight-bold">
+                                    <i class="bi bi-chat-dots"></i> Comentario (Requerido si se marca para corregir)
+                                </label>
+                                <textarea name="comentario" id="comentario-{{ $modalId }}-{{ $item->id }}" class="form-control" rows="3" placeholder="Ej: La firma no es visible, por favor, vuelva a escanear el documento."></textarea>
+                            </div>
 
                             <div class="document-actions mt-3">
                                 <a href="{{ asset($ruta) }}" class="btn btn-outline-{{$bgClass}}" target="_blank">
@@ -98,8 +86,8 @@
                     @else
                         <div class="alert alert-warning text-center">
                             <i class="bi bi-file-earmark-x" style="font-size: 2rem;"></i>
-                            <p class="mb-0 mt-2"><strong>Sin PDF disponible</strong></p>
-                            <small>El docente aún no ha subido {{ strtolower($title) }}.</small>
+                            <p class="mb-0 mt-2"><strong>Documento no disponible para revisión</strong></p>
+                            <small>El docente debe enviar o corregir el archivo.</small>
                         </div>
                     @endif
                 @endif

@@ -10,16 +10,16 @@ class Acreditar extends Model
     use HasFactory;
     protected $table = 'acreditaciones';
     protected $fillable = [
-        'ap_id',
+        'id_ap',
         'estado_acreditacion',
         'observacion',
         'f_acreditacion',
-        'estado' 
+        'state'
     ];
 
     public function asignacion_persona()
     {
-        return $this->belongsTo(asignacion_persona::class, 'ap_id');
+        return $this->belongsTo(asignacion_persona::class, 'id_ap');
     }
 
     public function archivos()

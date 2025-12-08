@@ -574,43 +574,10 @@
 
         <div class="dashboard-card-body">
             {{-- Filtros --}}
-            <div class="filters-section">
-                <h6 class="filters-title">
-                    <i class="bi bi-funnel"></i>
-                    Filtros de Búsqueda
-                </h6>
-                <form method="GET" action="{{ route('admin.Dashboard') }}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label for="facultad" class="form-label">Facultad:</label>
-                            <select id="facultad" name="facultad" class="form-select">
-                                <option value="">-- Todas --</option>
-                                @foreach($facultades as $fac)
-                                    <option value="{{ $fac->id }}">{{ $fac->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="escuela" class="form-label">Escuela:</label>
-                            <select id="escuela" name="escuela" class="form-select">
-                                <option value="">-- Todas --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="docente" class="form-label">Docente:</label>
-                            <select id="docente" name="docente" class="form-select">
-                                <option value="">-- Todos --</option>
-                            </select>
-                        </div>                        
-                        <div class="col-md-3 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn-filter">
-                                <i class="bi bi-filter"></i> 
-                                Filtrar Datos
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+            <x-data-filter
+                route="admin.Dashboard"
+                :facultades="$facultades"
+            />
 
             {{-- Métricas --}}
             <div class="metrics-section">
@@ -686,11 +653,11 @@
                             @foreach($listaEstudiantes as $i => $item)
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
-                                    <td>{{ $item->nombres }}</td>
-                                    <td>{{ $item->apellidos }}</td>
-                                    <td>{{ $item->facultad }}</td>
-                                    <td>{{ $item->escuela }}</td>
-                                    <td>{{ $item->semestre }}</td>
+                                    <td>{{ $item->asignacion_persona->persona->nombres }}</td>
+                                    <td>{{ $item->asignacion_persona->persona->apellidos }}</td>
+                                    <td>{{ $item->asignacion_persona->seccion_academica->facultad->name }}</td>
+                                    <td>{{ $item->asignacion_persona->seccion_academica->escuela->name }}</td>
+                                    <td>{{ $item->asignacion_persona->semestre->codigo }}</td>
                                     <td>
                                         @php $estadoFicha = $item->estado_ficha ?? 'Sin registrar'; @endphp
                                         @if($estadoFicha === 'Completo')
@@ -1040,12 +1007,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         docenteSelect.innerHTML = '<option value="">Cargando...</option>';
-        fetch(`/api/docentes/${escuelaId}/${semestreActivoId}`) // <-- Usar semestre activo
+        fetch(`/api/secciones/${escuelaId}/${semestreActivoId}`) // <-- Usar semestre activo
             .then(res => res.json())
             .then(data => {
                 let options = '<option value="">-- Todos --</option>';
                 data.forEach(d => {
-                    options += `<option value="${d.id}">${d.nombre}</option>`;
+                    options += `<option value="${d.id}">${d.name}</option>`;
                 });
                 docenteSelect.innerHTML = options;
             })

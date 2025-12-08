@@ -16,45 +16,203 @@ use Illuminate\Support\Facades\Log;
 
 class PersonaController extends Controller
 {
-    public function lista_docentes(){
-        // Obtener lista de docentes del semestre actual
+    public function lista_usuarios(Request $request){
+        $users = Persona::all();
+        return view('list_users.usuarios', compact('users'));        
+    }
+    
+    public function lista_subadmins(Request $request){
         $id_semestre = session('semestre_actual_id');
-        $personas = Persona::whereHas('asignacion_persona', function($query) use ($id_semestre){
+        $authUser = auth()->user();
+
+        $ap_now = $authUser->persona->asignacion_persona;
+
+        $facultades = Facultad::where('state', 1)->get();
+
+        $escuelas = Escuela::where('state', 1)->get();
+
+        $query = Persona::whereHas('asignacion_persona', function($query) use ($id_semestre, $request, $ap_now){
+            $query->where('id_rol', 2);
+            $query->where('id_semestre', $id_semestre);
+
+            $query->whereHas('seccion_academica', function($qsa) use ($request, $ap_now){
+                if($request->filled('facultad')){
+                    $qsa->where('id_facultad', $request->facultad);
+                }
+                if($request->filled('escuela')){
+                    $qsa->where('id_escuela', $request->escuela);
+                }
+                if($request->filled('seccion')){
+                    $qsa->where('id', $request->seccion);
+                }
+            });
+        });
+
+        $personas = $query->with([
+            'asignacion_persona.seccion_academica.facultad',
+            'asignacion_persona.seccion_academica.escuela',
+            'asignacion_persona.seccion_academica'
+        ])->get();
+
+        return view('list_users.subadmin', compact('personas', 'facultades', 'escuelas'));
+    }
+
+    public function lista_docentes(Request $request){
+        $id_semestre = session('semestre_actual_id');
+        $authUser = auth()->user();
+
+        $ap_now = $authUser->persona->asignacion_persona;
+
+        $queryFac = Facultad::where('state', 1);
+        if ($ap_now->id_rol == 2) {
+            $queryFac->where('id', $ap_now->id_facultad);
+        }
+        $facultades = $queryFac->get();
+
+
+        $escuelas = Escuela::where('state', 1)->get();
+
+        $query = Persona::whereHas('asignacion_persona', function($query) use ($id_semestre, $request, $ap_now){
             $query->where('id_rol', 3);
             $query->where('id_semestre', $id_semestre);
-        })->get();
-        $facultades = Facultad::where('estado', 1)->get();
-        $escuelas = Escuela::where('estado', 1)->get();
+
+            $query->whereHas('seccion_academica', function($qsa) use ($request, $ap_now){
+                if($request->filled('facultad')){
+                    $qsa->where('id_facultad', ($ap_now->id_rol == 2) ? $ap_now->id_facultad : $request->facultad);
+                }
+                if($request->filled('escuela')){
+                    $qsa->where('id_escuela', $request->escuela);
+                }
+                if($request->filled('seccion')){
+                    $qsa->where('id', $request->seccion);
+                }
+            });
+        });
+
+        $personas = $query->with([
+            'asignacion_persona.seccion_academica.facultad',
+            'asignacion_persona.seccion_academica.escuela',
+            'asignacion_persona.seccion_academica'
+        ])->get();
+
         return view('list_users.docente', compact('personas', 'facultades', 'escuelas'));
     }
 
-    public function lista_supervisores(){
+    public function lista_supervisores(Request $request){
         $id_semestre = session('semestre_actual_id');
-        $personas = Persona::whereHas('asignacion_persona', function($query) use ($id_semestre){
+        $authUser = auth()->user();
+
+        $ap_now = $authUser->persona->asignacion_persona;
+
+        $queryFac = Facultad::where('state', 1);
+        if ($ap_now->id_rol == 2) {
+            $queryFac->where('id', $ap_now->id_facultad);
+        }
+        $facultades = $queryFac->get();
+
+        $escuelas = Escuela::where('state', 1)->get();
+
+        $query = Persona::whereHas('asignacion_persona', function($query) use ($id_semestre, $ap_now, $request){
             $query->where('id_rol', 4);
             $query->where('id_semestre', $id_semestre);
-            if(auth()->user()->getRolId() == 3){
-                $query->where('id_escuela', auth()->user()->persona->asignacion_persona->id_escuela);
-            }
             
-        })->get();
-        $facultades = Facultad::where('estado', 1)->get();
-        $escuelas = Escuela::where('estado', 1)->get();
+            $query->whereHas('seccion_academica', function($qsa) use ($ap_now, $request){
+                if($ap_now->id_rol == 3) {
+                    $qsa->where('id', $ap_now->id_sa);
+                }
+                if($request->filled('facultad')){
+                    $qsa->where('id_facultad', $request->facultad);
+                }
+                if($request->filled('escuela')){
+                    $qsa->where('id_escuela', $request->escuela);
+                }
+                if($request->filled('seccion')){
+                    $qsa->where('id_seccion', $request->seccion);
+                }
+            });
+        });
+
+        $docentes = $query->with([
+            'asignacion_persona.seccion_academica.facultad',
+            'asignacion_persona.seccion_academica.escuela',
+            'asignacion_persona.seccion_academica'
+        ])->get();
+
+        $personas = $docentes;
+        
         return view('list_users.supervisor', compact('personas', 'facultades', 'escuelas'));
     }
 
-    public function lista_estudiantes(){
+    public function lista_estudiantes(Request $request){
         $id_semestre = session('semestre_actual_id');
-        $personas = Persona::whereHas('asignacion_persona', function($query) use ($id_semestre){
+        $authUser = auth()->user();
+
+        $ap_now = $authUser->persona->asignacion_persona;
+
+        $queryFac = Facultad::where('state', 1);
+        if ($ap_now->id_rol == 2) {
+            $queryFac->where('id', $ap_now->id_facultad);
+        }
+        $facultades = $queryFac->get();
+
+        Log::info('USUARIO ACTUAL: '.$ap_now);
+
+        $escuelas = Escuela::where('state', 1)->get();
+
+        $query = Persona::whereHas('asignacion_persona', function($query) use ($id_semestre, $request, $ap_now){
             $query->where('id_rol', 5);
             $query->where('id_semestre', $id_semestre);
-            if(auth()->user()->getRolId() == 3){
-                $query->where('id_escuela', auth()->user()->persona->asignacion_persona->id_escuela);
-            }
-        })->get();
-        $facultades = Facultad::where('estado', 1)->get();
-        $escuelas = Escuela::where('estado', 1)->get();
+
+            $query->whereHas('seccion_academica', function($qsa) use ($ap_now, $request){
+                if($ap_now->id_rol == 2) {
+                    $qsa->where('id_facultad', $ap_now->id_facultad);
+                }
+                if($ap_now->id_rol == 3) {
+                    $qsa->where('id', $ap_now->id_sa);
+                }
+                if($request->filled('facultad')){
+                    $qsa->where('id_facultad', $request->facultad);
+                }
+                if($request->filled('escuela')){
+                    $qsa->where('id_escuela', $request->escuela);
+                }
+                if($request->filled('seccion')){
+                    $qsa->where('id', $request->seccion);
+                }
+                //$qsa->where('id', $ap_now->id_sa);
+            });
+        });
+
+        $docentes = $query->with([
+            'asignacion_persona.seccion_academica.facultad',
+            'asignacion_persona.seccion_academica.escuela',
+            'asignacion_persona.seccion_academica'
+        ])->get();
+
+        $personas = $docentes;
+
         return view('list_users.estudiante', compact('personas', 'facultades', 'escuelas'));
+    }
+
+    public function lista_grupos_estudiantes(){
+        $id_semestre = session('semestre_actual_id');
+        $authUser = auth()->user();
+
+        $ap_now = $authUser->persona->asignacion_persona;
+
+        $grupo = DB::table('grupo_practica')
+            ->where('id_supervisor', $ap_now->id)
+            ->select('grupo_practica.name', 'grupo_practica.id')
+            ->first();
+
+        $grupo_estudiante = DB::table('grupo_estudiante as ge')
+            ->join('personas as p', 'ge.id_estudiante', '=', 'p.id')
+            ->join('grupo_practica as gp', 'ge.id_grupo_practica', '=', 'gp.id')
+            ->where('gp.id_supervisor', $ap_now->id)
+            ->select('ge.*', 'p.nombres', 'p.apellidos', 'gp.name as grupo_nombre')
+            ->get();
+
+        return view('list_users.grupo_estudiante', compact('grupo', 'grupo_estudiante'));
     }
 
     public function edit($id){
@@ -72,24 +230,54 @@ class PersonaController extends Controller
         return view('segmento.perfil', compact('persona'));
     }
 
+    public function changePasswordView()
+    {
+        $user = auth()->user();
+        return view('segmento.change-password', compact('user'));
+    }
+
     public function registro(){
         $user = auth()->user();
         $persona = $user->persona;
-        // Si la persona autenticada es rol 2 (docente), excluir también el tipo 'docente titular'
-        $rolesQuery = type_users::where('estado', 1)
-            ->where('name', '!=', 'admin');
+        $userRolId = $user->getRolId();
+        $id_semestre_actual = session('semestre_actual_id');
+        $ap = asignacion_persona::where('id_persona', $persona->id)
+                                ->where('id_semestre', $id_semestre_actual)
+                                ->with([
+                                    'seccion_academica.facultad', 
+                                    'seccion_academica.escuela', 
+                                    'seccion_academica'])
+                                ->first();
 
-        if ($user->getRolId() == 3) {
+        $rolesQuery = type_users::where('state', 1)
+            ->where('name', '!=', 'admin');
+        
+        if ($userRolId == 2) { // Sub Admin no puede crear otros Sub Admins
+            $rolesQuery->where('name', '!=', 'sub admin');
+        }
+
+        if ($userRolId == 3) { // Docente no puede crear Sub Admins ni otros Docentes
             $rolesQuery->where('name', '!=', 'docente titular');
             $rolesQuery->where('name', '!=', 'sub admin');
         }
 
         $roles = $rolesQuery->get();
-        $facultades = Facultad::where('estado', 1)->get();
-        $escuelas = Escuela::where('estado', 1)->get();
-        $semestres = Semestre::where('estado', 1)->orderBy('ciclo', 'desc')->get();
+
+        $queryFac = Facultad::where('state', 1);
+        if($userRolId == 2 || $userRolId == 3){ // Si es Sub Admin o Docente, filtrar por su facultad
+            $queryFac->where('id', $ap->id_facultad);
+        }
+        $facultades = $queryFac->get();
+
+        $escuelasQuery = Escuela::where('state', 1);
+        if($userRolId == 3){ // Si es Docente, filtrar también por su escuela
+            $escuelasQuery->where('id', $ap->id_escuela);
+        }
+        $escuelas = $escuelasQuery->get();
+
+        $semestres = Semestre::where('state', 1)->orderBy('ciclo', 'desc')->get();
             
-        return view('segmento.registrar', compact('roles', 'facultades', 'escuelas', 'persona', 'semestres'));
+        return view('segmento.registrar', compact('roles', 'facultades', 'escuelas', 'persona', 'semestres', 'ap'));
     }
 
     public function getEscuelas($facultad_id){
@@ -108,11 +296,16 @@ class PersonaController extends Controller
     }
 
     public function verificar(Request $request) {
-        $type = $request->input('type');
-        $value = $request->input('value');
+        // Validar que los datos necesarios están presentes
+        $request->validate([
+            'correo_inst' => 'required|email',
+            'semestre_id' => 'required|integer|exists:semestres,id',
+        ]);
+
+        $correo = $request->input('correo_inst');
         $semestre_id = $request->input('semestre_id');
 
-        $persona = Persona::where($type, $value)->first();
+        $persona = Persona::where('correo_inst', $correo)->first();
 
         if ($persona) {
             // El usuario existe, ahora verificamos si ya está asignado a este semestre
@@ -125,6 +318,8 @@ class PersonaController extends Controller
                 'already_assigned' => $asignacionExistente,
                 'persona' => $persona
             ]);
+
+            Log::info('Persona encontrada:'.$persona);
         }
 
         return response()->json(['found' => false]);
@@ -137,6 +332,7 @@ class PersonaController extends Controller
             'semestre' => 'required|exists:semestres,id',
             'facultad' => 'nullable|exists:facultades,id',
             'escuela' => 'nullable|exists:escuelas,id',
+            'seccion' => 'nullable|exists:secciones,id'
         ]);
 
         // Verificar si ya existe una asignación para evitar duplicados por si acaso
@@ -201,101 +397,90 @@ class PersonaController extends Controller
 
     public function store(Request $request){
         $persona_id = $request->input('persona_id');
-
+        
         $request->validate([
             'rol' => 'required|exists:type_users,id',
             'id_semestre' => 'required|exists:semestres,id',
             'facultad' => 'required|exists:facultades,id',
-            'escuela' => 'required|exists:escuelas,id',
+            //'escuela' => 'required|exists:escuelas,id'
         ]);
 
         try {
-            $persona_id_final = $persona_id;
-            $success_message = '';
-            $persona = null;
-
             if (empty($persona_id)) {
-                Log::info('Datos recibidos en el controller:', $request->all());
-                $request->validate([
-                    'codigo' => 'required|string|size:10|unique:personas,codigo',
-                    'dni' => 'required|string|size:8|unique:personas,dni',
-                    'nombres' => 'required|string|max:50',
-                    'apellidos' => 'required|string|max:50',
-                    'celular' => 'nullable|string|size:9',
-                    'correo_inst' => 'nullable|email|max:150|unique:personas,correo_inst',
-                    'sexo' => 'nullable|in:M,F',
-                    'provincia' => 'nullable|string|max:50',
-                    'distrito' => 'nullable|string|max:50'
-                ]);
-                
-                $correo_inst = $request->correo_inst ?: $request->codigo . '@unjfsc.edu.pe';
-                $sexo = $request->sexo ?: 'M';
-
-                $user = User::create([
-                    'name' => $request->codigo,
-                    'email' => $correo_inst,
-                    'password' => Hash::make($request->codigo),
-                ]);
-
-                $persona = Persona::create([
-                    'codigo' => $request->codigo,
-                    'dni' => $request->dni,
-                    'nombres' => $request->nombres,
-                    'apellidos' => $request->apellidos,
-                    'celular' => $request->celular,
-                    'sexo' => $sexo,
-                    'correo_inst' => $correo_inst,
-                    'departamento' => 'Lima Provincias',
-                    'provincia' => $request->provincia,
-                    'distrito' => $request->distrito,
-                    'usuario_id' => $user->id,
-                    'date_create' => now(),
-                    'date_update' => now(),
-                    'estado' => 1
-                ]);
-
-
+                $persona = $this->crearNuevaPersona($request);
                 $persona_id_final = $persona->id;
-                $success_message = 'Persona creada y asignada al semestre correctamente.';
+                $success_message = 'Persona creada y asignada al semestre actual correctamente.';
             } else {
                 $persona_id_final = $persona_id;
-                $success_message = 'Usuario existente asignado correctamente.';
+                $success_message = 'Usuario existente asignado al semestre actual correctamente.';
             }
 
-            $asignacionExistente = asignacion_persona::where('id_persona', $persona_id_final)
-                ->where('id_semestre', $request->id_semestre)
-                ->first();
-
-            if ($asignacionExistente) {
-                return back()->with('error', 'Esta persona ya tiene una asignación en este semestre.');
-            }
-
-            $is_admin_or_subadmin = in_array($request->rol, [1, 2]);
-            $is_doc_or_sup = in_array($request->rol, [3, 4]);
-
-            asignacion_persona::create([
-                'id_semestre' => $request->id_semestre,
-                'id_persona' => $persona_id_final,
-                'id_rol' => $request->rol,
-                'id_escuela' => $is_admin_or_subadmin ? null : $request->escuela,
-                'id_facultad' => $request->rol == 1 ? null : $request->facultad,
-                'date_create' => now(),
-                'date_update' => now(),
-                'estado' => $is_doc_or_sup ? 2 : 1
-            ]);
+            $this->asignarPersonaASemestre($persona_id_final, $request);
 
             return back()->with('success', $success_message);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // MUY IMPORTANTE: Devolver la excepción de validación para que Laravel la maneje.
-            // Si no la devuelves, se va al catch general y pierdes el detalle del error.
-            throw $e; 
+            // Devolver los errores de validación a la vista anterior con los datos de entrada.
+            return redirect()->back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ocurrió un error inesperado en el servidor: ' . $e->getMessage()
-            ], 500);
+            // Capturar cualquier otro error y devolverlo a la vista.
+            Log::error('Error en PersonaController@store: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error inesperado al registrar. Por favor, intente de nuevo.');
         }
+    }
+
+    private function crearNuevaPersona(Request $request)
+    {
+        $validatedData = $request->validate([
+            'dni' => 'nullable|string|size:8|unique:personas,dni',
+            'nombres' => 'required|string|max:50',
+            'apellidos' => 'required|string|max:50',
+            'celular' => 'nullable|string|size:9',
+            'correo_inst' => 'required|email|max:150|unique:personas,correo_inst',
+            'sexo' => 'required|in:M,F',
+            'provincia' => 'nullable|string|max:50',
+            'distrito' => 'nullable|string|max:50'
+        ]);
+
+        $username = explode('@', $validatedData['correo_inst'])[0];
+        $isStudent = $request->input('rol') == 5;
+
+        $user = User::create([
+            'name' => $username,
+            'email' => $validatedData['correo_inst'],
+            'password' => Hash::make($isStudent ? $request->codigo : '12345678'),
+        ]);
+
+        return Persona::create([
+            'codigo' => $username,
+            'usuario_id' => $user->id,
+            'departamento' => 'Lima Provincias',
+            'state' => 1
+        ] + $validatedData);
+    }
+
+    private function asignarPersonaASemestre($persona_id, Request $request)
+    {
+        $asignacionExistente = asignacion_persona::where('id_persona', $persona_id)
+            ->where('id_semestre', $request->id_semestre)
+            ->first();
+
+        if ($asignacionExistente) {
+            throw new \Exception('Esta persona ya tiene una asignación en este semestre.');
+        }
+
+        $rol = $request->rol;
+        $is_admin_or_subadmin = in_array($rol, [1, 2]);
+        $is_doc_or_sup = in_array($rol, [3, 4]);
+
+        return asignacion_persona::create([
+            'id_semestre' => $request->id_semestre,
+            'id_persona' => $persona_id,
+            'id_rol' => $rol,
+            'id_facultad' => $rol == 2 ? $request->facultad : null,
+            'id_sa' => $is_admin_or_subadmin ? null :$request->seccion,
+            'state' => $is_doc_or_sup ? 2 : 1 // 2: pendiente, 1: activo
+        ]);
     }
 
     public function store_masivo(Request $request){
@@ -476,5 +661,37 @@ class PersonaController extends Controller
         ]);
 
         return back()->with('success', 'Foto subida correctamente.');
+    }
+
+    // actualizar contraseña
+    public function updatePassword(Request $request){
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ], [
+            'current_password.required' => 'La contraseña actual es obligatoria.',
+            'new_password.required' => 'La nueva contraseña es obligatoria.',
+            'new_password.min' => 'La nueva contraseña debe tener al menos 8 caracteres.',
+            'new_password.confirmed' => 'La confirmación de la nueva contraseña no coincide.',
+        ]);
+
+        $user = auth()->user();
+
+        // Verificar si la contraseña actual es correcta
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->with('error', 'La contraseña actual que ingresaste es incorrecta.');
+        }
+
+        // Verificar que la nueva contraseña no sea igual a la actual
+        if (Hash::check($request->new_password, $user->password)) {
+            return back()->with('error', 'La nueva contraseña no puede ser igual a la actual.');
+        }
+
+        // Actualizar la contraseña
+        $user->password = Hash::make($request->new_password);
+        $user->password_changed_at = now(); // Marcar la contraseña como cambiada
+        $user->save();
+
+        return back()->with('success', '¡Tu contraseña ha sido actualizada exitosamente!');
     }
 }

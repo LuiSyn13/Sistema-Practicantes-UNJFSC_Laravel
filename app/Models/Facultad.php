@@ -20,9 +20,7 @@ class Facultad extends Model
 
         protected $fillable = [
             'name',
-            'user_create',
-            'date_create',
-            'estado',
+            'state',
         ];
 
         public $timestamps = false;

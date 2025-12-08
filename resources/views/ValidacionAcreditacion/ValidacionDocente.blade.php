@@ -8,10 +8,14 @@
             <div class="app-card-header">
                 <h5 class="app-card-title">
                     <i class="bi bi-clipboard-check"></i>
-                    Lista de Docentes para Acreditar
+                    Lista de {{ $msj }} para Acreditar
                 </h5>
             </div>
             <div class="app-card-body">
+                <x-data-filter
+                route="docente"
+                :facultades="$facultades"
+                />
                 <div class="table-container">
                     <div class="table-responsive">
                         <table class="table" id="dataTable" width="100%" cellspacing="0">
@@ -23,11 +27,13 @@
                                     <th>Escuela</th>
                                     <th>C. Lectiva</th>
                                     <th>Horario</th>
+                                    @if($option == 2)
                                     <th>Resolucion</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($acreditar as $item)
+                                @foreach ($acreditar as $index => $item)
                                     @php
                                         $archivosPorTipo = $item->archivos->groupBy('tipo');
 
@@ -48,25 +54,29 @@
                                                     return 'secondary';
                                             }
                                         };
-
-                                        $latestCL = $getLatest('carga lectiva');
-                                        $historialCL = $archivosPorTipo->get('carga lectiva');
-                                        $bg_cl = $getBgColor($latestCL->estado_archivo);
-
+ 
+                                        $latestCL = $getLatest('carga_lectiva');
+                                        $historialCL = $archivosPorTipo->get('carga_lectiva');
+                                        $estadoCL = $latestCL ? $latestCL->estado_archivo : 'Falta';
+                                        $bg_cl = $getBgColor($estadoCL);
+ 
                                         $latestHorario = $getLatest('horario');
                                         $historialHorario = $archivosPorTipo->get('horario');
-                                        $bg_horario = $getBgColor($latestHorario->estado_archivo);
-
-                                        $latestResolucion = $getLatest('resolucion');
-                                        $historialResolucion = $archivosPorTipo->get('resolucion');
-                                        $bg_resolucion = $getBgColor($latestResolucion->estado_archivo);
-                                        
+                                        $estadoHorario = $latestHorario ? $latestHorario->estado_archivo : 'Falta';
+                                        $bg_horario = $getBgColor($estadoHorario);
+ 
+                                        if ($item->asignacion_persona->id_rol == 4) {
+                                            $latestResolucion = $getLatest('resolucion');
+                                            $historialResolucion = $archivosPorTipo->get('resolucion');
+                                            $estadoResolucion = $latestResolucion ? $latestResolucion->estado_archivo : 'Falta';
+                                            $bg_resolucion = $getBgColor($estadoResolucion);
+                                        }
                                     @endphp
                                     <tr>
-                                        <td>{{ $item->id }}</td>
+                                        <td>{{ $index+1 }}</td>
                                         <td>{{ $item->asignacion_persona->persona->nombres }}</td>
                                         <td>{{ $item->asignacion_persona->semestre->codigo }}</td>
-                                        <td>{{ $item->asignacion_persona->escuela->name }}</td>
+                                        <td>{{ $item->asignacion_persona->seccion_academica->escuela->name }}</td>
                                         <td>
                                             <button type="button" class="btn btn-{{ $bg_cl }}" data-toggle="modal" data-target="#modalCLectiva{{ $item->id }}">
                                                 <i class="bi bi-file-earmark-text"></i>
@@ -79,12 +89,14 @@
                                                 Horario de Clases
                                             </button>
                                         </td>
+                                        @if($item->asignacion_persona->id_rol == 4)
                                         <td>
                                             <button type="button" class="btn btn-{{ $bg_resolucion }}" data-toggle="modal" data-target="#modalResolucion{{ $item->id }}">
                                                 <i class="bi bi-file-earmark-text"></i>
                                                 Resolución
                                             </button>
                                         </td>
+                                        @endif
                                     </tr>
                                     
                                     <!-- Modal Carga Lectiva -->
@@ -117,6 +129,7 @@
                                         isArchivoModel="true"
                                     />
 
+                                    @if($item->asignacion_persona->id_rol == 4)
                                     <!-- Modal Resolucion -->
                                     <x-document-modal
                                         :item="$item"
@@ -131,6 +144,7 @@
                                         :historialArchivos="$historialResolucion"
                                         isArchivoModel="true"
                                     />
+                                    @endif
                                 @endforeach
                             </tbody>
                         </table>

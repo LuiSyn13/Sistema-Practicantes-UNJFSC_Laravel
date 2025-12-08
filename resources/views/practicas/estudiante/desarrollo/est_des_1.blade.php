@@ -22,12 +22,12 @@
                 <div id="companyStatus">
                     @if ($empresaExiste)
                         @php $empresa = $practicaData->empresa; @endphp
-                        @if (($empresa->estado == 1 && $practicaData->estado_proceso == 'en proceso') || $practicaData->estado_proceso == 'completo')
+                        @if (($empresa->state == 1 && $practicaData->estado_practica == 'en proceso') || $practicaData->estado_practica == 'completo')
                             <p class="text-muted mb-3">Visualiza los datos de la empresa registrada</p>
                             <a class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEmpresa">
                                 <i class="bi bi-eye-fill me-1"></i> Visualizar
                             </a>
-                        @elseif ($empresa->estado == 2)
+                        @elseif ($empresa->state == 2)
                             <p class="text-muted mb-3">Corrige los datos observados de la empresa</p>
                             <a class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEmpresa">
                                 <i class="bi bi-pencil-square me-1"></i> Editar
@@ -53,12 +53,12 @@
                 <div id="supervisorStatus">
                     @if ($jefeExiste)
                         @php $jefeInmediato = $practicaData->jefeInmediato; @endphp
-                        @if (($jefeInmediato->estado == 1 && $practicaData->estado_proceso == 'en proceso') || $practicaData->estado_proceso == 'completo')
+                        @if (($jefeInmediato->state == 1 && $practicaData->estado_practica == 'en proceso') || $practicaData->estado_practica == 'completo')
                             <p class="text-muted mb-3">Visualiza los datos de tu jefe inmediato</p>
                             <a class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalJefeInmediato">
                                 <i class="bi bi-eye-fill me-1"></i> Visualizar
                             </a>
-                        @elseif ($jefeInmediato->estado == 2)
+                        @elseif ($jefeInmediato->state == 2)
                             <p class="text-muted mb-3">Corrige los datos observados del jefe inmediato</p>
                             <a class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalJefeInmediato">
                                 <i class="bi bi-pencil-square me-1"></i> Editar
@@ -76,7 +76,7 @@
     </div>
 
     <!-- Estado de Rechazo -->
-    @if ($practicaData->estado_proceso === 'rechazado')
+    @if ($practicaData->estado_practica === 'rechazado')
         <div class="alert alert-danger mt-4" id="rejectionAlert">
             <div class="text-center">
                 <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #dc2626;"></i>
@@ -105,8 +105,8 @@
                     $empresa = $practicaData->empresa;
                 @endphp
                 @if ($empresaExiste)
-                    @if ($empresa->estado == 2)
-                        <form id="formEmpresa" action="{{ route('empresa.edit', $practicaData->id) }}" method="POST">
+                    @if ($empresa->state == 2)
+                        <form id="formEmpresa" action="{{ route('empresa.edit', $empresa->id) }}" method="POST">
                     @else
                         <form id="formEmpresa" action="{{ route('empresas.store', $practicaData->id) }}" method="POST">
                     @endif
@@ -115,7 +115,7 @@
                 @endif
                     @csrf
                     <div class="mb-3">
-                        <label for="empresa" class="form-label">Nombre de la Empresa</label>
+                        <label for="empresa" class="form-label">Nombre de la Empresa {{ $practicaData->id }}</label>
                         <input type="text" class="form-control" id="empresa" name="empresa" value="{{ $practicaData->empresa->nombre  ?? '' }}" @if(($empresaExiste ) && $practicaData->empresa->estado == 1) readonly @endif required>
                     </div>
                     <div class="row">
@@ -146,19 +146,19 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Correo electrónico</label>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="empresa@dominio.com" value="{{ $practicaData->empresa->correo  ?? '' }}" @if(($empresaExiste ) && $practicaData->empresa->estado == 1) readonly @endif required>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="empresa@dominio.com" value="{{ $practicaData->empresa->correo  ?? '' }}" @if(($empresaExiste ) && $practicaData->empresa->state == 1) readonly @endif required>
                             </div>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="sitio_web" class="form-label">Sitio web (opcional)</label>
-                        <input type="url" class="form-control" id="sitio_web" name="sitio_web" placeholder="https://www.empresa.com" value="{{ $practicaData->empresa->web  ?? '' }}" @if(($empresaExiste ) && $practicaData->empresa->estado == 1) readonly @endif>
+                        <input type="url" class="form-control" id="sitio_web" name="sitio_web" placeholder="https://www.empresa.com" value="{{ $practicaData->empresa->web  ?? '' }}" @if(($empresaExiste ) && $practicaData->empresa->state == 1) readonly @endif>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 @if($empresaExiste)
-                    @if ($empresa->estado == 2)
+                    @if ($empresa->state == 2)
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" form="formEmpresa" class="btn btn-primary-custom">
                             <i class="bi bi-check-circle me-1"></i> Actualizar
@@ -193,7 +193,7 @@
                     $jefeInmediato = $practicaData->jefeInmediato;
                 @endphp
                 @if ($jefeExiste)
-                    @if ($jefeInmediato->estado == 2)
+                    @if ($jefeInmediato->state == 2)
                         <form id="formJefeInmediato" action="{{ route('jefe_inmediato.edit', $practicaData->id) }}" method="POST">
                     @else
                         <form id="formJefeInmediato" action="{{ route('jefe_inmediato.store', $practicaData->id) }}" method="POST">
@@ -204,43 +204,43 @@
                     @csrf
                     <div class="mb-3">
                         <label for="name" class="form-label">Apellidos y Nombres</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{ $practicaData->jefeInmediato->nombres  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->estado == 1) readonly @endif required>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ $practicaData->jefeInmediato->nombres  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->state == 1) readonly @endif required>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="dni" class="form-label">DNI</label>
-                                <input type="text" class="form-control" id="dni" name="dni" maxlength="8" value="{{ $practicaData->jefeInmediato->dni  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->estado == 1) readonly @endif required>
+                                <input type="text" class="form-control" id="dni" name="dni" maxlength="8" value="{{ $practicaData->jefeInmediato->dni  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->state == 1) readonly @endif required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="sitio_web_jefe" class="form-label">Sitio web (opcional)</label>
-                                <input type="url" class="form-control" id="sitio_web_jefe" name="sitio_web" placeholder="https://www.linkedin.com" value="{{ $practicaData->jefeInmediato->web  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->estado == 1) readonly @endif>
+                                <input type="url" class="form-control" id="sitio_web_jefe" name="sitio_web" placeholder="https://www.linkedin.com" value="{{ $practicaData->jefeInmediato->web  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->state == 1) readonly @endif>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="area" class="form-label">Área o Departamento</label>
-                                <input type="text" class="form-control" id="area" name="area" value="{{ $practicaData->jefeInmediato->area  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->estado == 1) readonly @endif required>
+                                <input type="text" class="form-control" id="area" name="area" value="{{ $practicaData->jefeInmediato->area  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->state == 1) readonly @endif required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="cargo" class="form-label">Cargo o Puesto</label>
-                                <input type="text" class="form-control" id="cargo" name="cargo" value="{{ $practicaData->jefeInmediato->cargo  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->estado == 1) readonly @endif required>
+                                <input type="text" class="form-control" id="cargo" name="cargo" value="{{ $practicaData->jefeInmediato->cargo  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->state == 1) readonly @endif required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="telefono_jefe" class="form-label">Teléfono</label>
-                                <input type="text" class="form-control" id="telefono_jefe" name="telefono" maxlength="9" placeholder="Ej: 987654321" value="{{ $practicaData->jefeInmediato->telefono  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->estado == 1) readonly @endif required>
+                                <input type="text" class="form-control" id="telefono_jefe" name="telefono" maxlength="9" placeholder="Ej: 987654321" value="{{ $practicaData->jefeInmediato->telefono  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->state == 1) readonly @endif required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="email_jefe" class="form-label">Correo electrónico</label>
-                                <input type="email" class="form-control" id="email_jefe" name="email" placeholder="jefe@empresa.com" value="{{ $practicaData->jefeInmediato->correo  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->estado == 1) readonly @endif required>
+                                <input type="email" class="form-control" id="email_jefe" name="email" placeholder="jefe@empresa.com" value="{{ $practicaData->jefeInmediato->correo  ?? '' }}" @if($jefeExiste && $practicaData->jefeInmediato->state == 1) readonly @endif required>
                             </div>
                         </div>
                     </div>
@@ -248,7 +248,7 @@
             </div>
             <div class="modal-footer">
                 @if($jefeExiste)
-                    @if ($jefeInmediato->estado == 2)
+                    @if ($jefeInmediato->state == 2)
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" form="formJefeInmediato" class="btn btn-primary-custom">
                             <i class="bi bi-check-circle me-1"></i> Actualizar

@@ -11,31 +11,28 @@ class Practica extends Model
     protected $table = 'practicas';
 
     protected $fillable = [
-        'estudiante_id',
-        'estado_proceso',
+        'id_ap',
+        'estado_practica',
         'tipo_practica',
-        'ruta_fut',
-        'ruta_carta_aceptacion',
-        'ruta_carta_presentacion',
-        'ruta_plan_actividades',
-        'ruta_constancia_cumplimiento',
-        'ruta_registro_actividades',
-        'ruta_control_actividades',
-        'ruta_informe_final',
-        'estado'
+        'fecha_inicio',
+        'fecha_fin',
+        'observacion',
+        'calificacion',
+        'state'
     ];
 
-    public function persona()
+    public function asignacion_persona()
     {
-        return $this->belongsTo(Persona::class, 'estudiante_id');
-    }
-    public function empresa()
-    {
-        return $this->hasOne(Empresa::class, 'practicas_id','id');
-    }
-    public function jefeInmediato()
-    {
-        return $this->hasOne(JefeInmediato::class, 'practicas_id','id');
+        return $this->belongsTo(asignacion_persona::class, 'id_ap');
     }
 
+    public function empresa()
+    {
+        return $this->hasOne(Empresa::class, 'id_practica');
+    }
+
+    public function jefeInmediato()
+    {
+        return $this->hasOne(JefeInmediato::class, 'id_practica');
+    }
 }

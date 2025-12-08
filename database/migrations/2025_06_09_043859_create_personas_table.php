@@ -28,12 +28,9 @@ return new class extends Migration
             $table->string('provincia', 50)->nullable();
             $table->string('distrito', 50)->nullable();
             $table->unsignedBigInteger('usuario_id');
-            $table->unsignedBigInteger('rol_id');
-            $table->timestamp('date_create')->nullable();
-            $table->timestamp('date_update')->nullable();
-            $table->boolean('estado')->default(true);
+            $table->timestamps();
+            $table->boolean('state')->default(true);
             $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('rol_id')->references('id')->on('type_users')->onDelete('cascade');
            
         });
     }

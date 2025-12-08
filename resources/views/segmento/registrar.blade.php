@@ -435,33 +435,60 @@
                         </div>
                     </div>
                     
-                    <div id="facultadEscuelaContainerMasivo">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="facultadMasiva">Facultad</label>
-                                    <select class="form-control" id="facultadMasiva" name="facultad">
-                                        <option value="">Seleccione una facultad</option>
-                                        @foreach($facultades as $facultad)
-                                            <option value="{{ $facultad->id }}">{{ $facultad->name }}</option>
-                                        @endforeach
+                    <!-- Sección de ASIGNACIÓN (Habilitada en ambos casos, pero con lógica) -->
+                    <div id="assignmentContainer" class="section-box mt-4">
+                        <h6 class="mb-3 text-secondary"><i class="bi bi-clipboard-check-fill me-1"></i> 3. Asignación y Rol</h6>
+                        @if($ap->id_rol == 3)
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="facultad" class="form-label">Facultad</label>
+                                    <select class="form-control" id="facultad" name="facultad" required>
+                                        <option value="{{ $ap->seccion_academica->facultad->id }}">{{ $ap->seccion_academica->facultad->name }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="escuela" class="form-label">Escuela</label>
+                                    <select class="form-control" id="escuela" name="escuela" required>
+                                        <option value="{{ $ap->seccion_academica->escuela->id }}">{{ $ap->seccion_academica->escuela->name }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="seccion" class="form-label">Sección</label>
+                                    <select class="form-control" id="seccion" name="seccion" required>
+                                        <option value="{{ $ap->seccion_academica->id }}">{{ $ap->seccion_academica->seccion }}</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="escuelaMasiva">Escuela</label>
-                                    <select class="form-control" id="escuelaMasiva" name="escuela" disabled>
-                                        <option value="">Seleccione una escuela</option>
-                                        @foreach($escuelas as $escuela)
-                                            <option value="{{ $escuela->id }}" data-facultad="{{ $escuela->facultad_id }}" hidden>
-                                                {{ $escuela->name }}
-                                            </option>
+                        @else
+                        <div class="row g-3">
+                            <!-- Facultad -->
+                            <div class="col-md-4">
+                                <label for="facultad" class="form-label">Facultad</label>
+                                <select class="form-control" id="facultad_masivo" name="facultad" required>
+                                    <option value="">Seleccione una facultad</option>
+                                    @foreach($facultades as $facultad)
+                                        @foreach($facultades as $fac)
+                                            <option value="{{ $fac->id }}">{{ $fac->name }}</option>
                                         @endforeach
-                                    </select>
-                                </div>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <!-- Escuela -->
+                            <div class="col-md-4">
+                                <label for="escuela" class="form-label">Escuela</label>
+                                <select class="form-control" id="escuela_masivo" name="escuela" required disabled>
+                                    <option value="">Seleccione una escuela</option>
+                                </select>
+                            </div>
+                            <!-- Seccion -->
+                            <div class="col-md-4">
+                                <label for="seccion" class="form-label">Sección</label>
+                                <select class="form-control" id="seccion_masivo" name="seccion" disabled>
+                                    <option value="">Seleccione una sección</option>
+                                </select>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -487,7 +514,7 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="modalRegistroLabel">
                     <i class="bi bi-person-plus me-2"></i>
-                    Añadir Usuario {{ $id_semestre }}
+                    Añadir Usuario
                 </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -497,22 +524,28 @@
                 <!-- Sección de BÚSQUEDA (Siempre Visible) -->
                     <div id="search-input-container">
                         <h6 class="mb-3 text-primary"><i class="bi bi-search me-1"></i> 1. Verificar Usuario Existente</h6>
-                        <div class="row g-3 align-items-end">
-                            <!-- Selector DNI/CÓDIGO -->
-                            <div class="col-md-4">
-                                <label for="searchType" class="form-label">Buscar por:</label>
-                                <select id="searchType" class="form-control">
-                                    <option value="dni">DNI</option>
-                                    <option value="codigo" selected>Código</option>
+                        <div class="row g-2 align-items-end">
+                            <!-- Rol -->
+                            <div class="col-md-3">
+                                <label for="rolRegistro" class="form-label">Tipo de Usuario (Rol)</label>
+                                <select class="form-control" id="rolRegistro" name="rol" required onchange="toggleFacultadEscuela('facultadEscuelaContainerRegistro'); completarCorreo();">
+                                    <option value="">Seleccione un tipo de usuario</option>
+                                    @foreach($roles as $rol)
+                                        <option value="{{ $rol->id }}">{{ $rol->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
-                            <!-- Campo de Búsqueda -->
-                            <div class="col-md-5">
-                                <label for="searchValue" class="form-label">Valor de Búsqueda</label>
-                                <input type="text" class="form-control" id="searchValue" placeholder="Ingrese Código o DNI" minlength="8" maxlength="10" required>
+                            <!-- Campo de Búsqueda por Correo -->
+                            <div class="col-md-7">
+                                <label for="searchValue" class="form-label">Correo Institucional</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchValue" placeholder="2020112233 o j_perez" required>
+                                    <span class="input-group-text">@unjfsc.edu.pe</span>
+                                </div>
                             </div>
+
                             <!-- Botón de Verificación -->
-                            <div class="col-md-3 d-flex align-items-end">
+                            <div class="col-md-2">
                                 <button type="button" class="btn btn-success p-3 w-100" id="btnVerify" onclick="verifyUser()">
                                     <i class="bi bi-check-circle-fill me-2"></i>
                                     Verificar
@@ -523,13 +556,16 @@
                         <!-- Mensaje de Resultado de Búsqueda -->
                         <div id="searchResult" class="mt-3"></div>
                     </div>
-                <form id="formRegistro" action="{{ route('personas.store') }}" method="POST">
+                <form id="formRegistro" action="{{ route('personas.store') }}" method="POST" class="mt-4">
                     @csrf
                     <!-- Campo Oculto para el ID del Semestre -->
                     <input type="hidden" name="id_semestre" value="{{ $id_semestre }}">
                     
                     <!-- CAMPO CLAVE: ID de Persona. Será llenado por JS si la persona existe. -->
                     <input type="hidden" id="personaId" name="persona_id">
+                    <!-- El rol se toma del select 'rolRegistro' que ahora está dentro del form -->
+                    <input type="hidden" id="rolHidden" name="rol">
+
 
                     <!-- Sección de DATOS PERSONALES (Oculta por defecto) -->
                     <div id="personalDataContainer" style="display: none;" class="section-box">
@@ -537,29 +573,22 @@
                         
                         <!-- Campos solo lectura para existentes / Editables para nuevos -->
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <!-- El campo de código ahora es solo para estudiantes -->
+                            <div class="col-md-6">
                                 <label for="codigo" class="form-label">Código</label>
-                                <input type="tel" class="form-control" id="codigo" name="codigo" maxlength="10" required disabled>
+                                <input type="tel" class="form-control" id="codigo" name="codigo" maxlength="10" disabled>
                             </div>
-                            <div class="col-md-4">
-                                <label for="dni" class="form-label">DNI</label>
-                                <input type="tel" class="form-control" id="dni" name="dni" maxlength="8" required disabled>
-                            </div>                            
-                            <div class="col-md-4">
-                                <label for="nombres" class="form-label">Nombres</label>
-                                <input type="text" class="form-control" id="nombres" name="nombres" required disabled>
-                            </div>
+                            <div class="col-md-6">
+                                <label for="correo_inst" class="form-label">Correo Institucional</label>
+                                <input type="email" class="form-control" id="correo_inst" name="correo_inst" placeholder="ejemplo@unjfsc.edu.pe" required disabled>
+                            </div>                        
                             <div class="col-md-4">
                                 <label for="apellidos" class="form-label">Apellidos</label>
                                 <input type="text" class="form-control" id="apellidos" name="apellidos" required disabled>
                             </div>
                             <div class="col-md-4">
-                                <label for="celular" class="form-label">Celular</label>
-                                <input type="tel" class="form-control" id="celular" name="celular" required disabled maxlength="9">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="correo_inst" class="form-label">Correo Institucional</label>
-                                <input type="email" class="form-control" id="correo_inst" name="correo_inst" placeholder="ejemplo@unjfsc.edu.pe" required disabled>
+                                <label for="nombres" class="form-label">Nombres</label>
+                                <input type="text" class="form-control" id="nombres" name="nombres" required disabled>
                             </div>
                             <div class="col-md-4">
                                 <label for="sexo" class="form-label">Género</label>
@@ -569,61 +598,88 @@
                                     <option value="F">Femenino</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                        <h6 class="mb-3 text-secondary">Datos Adicionales (Opcional)</h6>
+                        <div class="col-md-6">
+                                <label for="dni" class="form-label">DNI</label>
+                                <input type="tel" class="form-control" id="dni" name="dni" maxlength="8" disabled>
+                            </div> 
+                            <div class="col-md-6">
+                                <label for="celular" class="form-label">Celular</label>
+                                <input type="tel" class="form-control" id="celular" name="celular" disabled maxlength="9">
+                            </div>
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="provincia">Provincia</label>
-                                    <select class="form-control" id="provincia" name="provincia" required>
+                                    <select class="form-control" id="provincia" name="provincia">
                                         <option value="">Seleccione una provincia</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="distrito">Distrito</label>
-                                    <select class="form-control" id="distrito" name="distrito" required disabled>
+                                    <select class="form-control" id="distrito" name="distrito" disabled>
                                         <option value="">Seleccione un distrito</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
+                        
                     </div>
                     <!-- Sección de ASIGNACIÓN (Habilitada en ambos casos, pero con lógica) -->
                     <div id="assignmentContainer" class="section-box mt-4">
                         <h6 class="mb-3 text-secondary"><i class="bi bi-clipboard-check-fill me-1"></i> 3. Asignación y Rol</h6>
-                        <div class="row g-3">
-                            <!-- Rol -->
-                            <div class="col-md-4">
-                                <label for="rolRegistro" class="form-label">Tipo de Usuario (Rol)</label>
-                                <select class="form-control" id="rolRegistro" name="rol" required onchange="toggleFacultadEscuela('facultadEscuelaContainerRegistro'); completarCorreo();">
-                                    <option value="">Seleccione un tipo de usuario</option>
-                                    @foreach($roles as $rol)
-                                        <option value="{{ $rol->id }}">{{ $rol->name }}</option>
-                                    @endforeach
-                                </select>
+                        @if($ap->id_rol == 3)
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="facultad" class="form-label">Facultad</label>
+                                    <select class="form-control" id="facultad" name="facultad" required>
+                                        <option value="{{ $ap->seccion_academica->facultad->id }}">{{ $ap->seccion_academica->facultad->name }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="escuela" class="form-label">Escuela</label>
+                                    <select class="form-control" id="escuela" name="escuela" required>
+                                        <option value="{{ $ap->seccion_academica->escuela->id }}">{{ $ap->seccion_academica->escuela->name }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="seccion" class="form-label">Sección</label>
+                                    <select class="form-control" id="seccion" name="seccion" required>
+                                        <option value="{{ $ap->seccion_academica->id }}">{{ $ap->seccion_academica->seccion }}</option>
+                                    </select>
+                                </div>
                             </div>
+                        @else
+                        <div class="row g-3">
                             <!-- Facultad -->
                             <div class="col-md-4">
-                                <label for="facultadRegistro" class="form-label">Facultad</label>
-                                <select class="form-control" id="facultadRegistro" name="facultad" >
+                                <label for="facultad" class="form-label">Facultad</label>
+                                <select class="form-control" id="facultad_registro" name="facultad" required>
                                     <option value="">Seleccione una facultad</option>
                                     @foreach($facultades as $facultad)
-                                        <option value="{{ $facultad->id }}">{{ $facultad->name }}</option>
+                                        @foreach($facultades as $fac)
+                                            <option value="{{ $fac->id }}">{{ $fac->name }}</option>
+                                        @endforeach
                                     @endforeach
                                 </select>
                             </div>
                             <!-- Escuela -->
                             <div class="col-md-4">
-                                <label for="escuelaRegistro" class="form-label">Escuela</label>
-                                <select class="form-control" id="escuelaRegistro" name="escuela" disabled>
+                                <label for="escuela" class="form-label">Escuela</label>
+                                <select class="form-control" id="escuela_registro" name="escuela" required disabled>
                                     <option value="">Seleccione una escuela</option>
-                                    @foreach($escuelas as $escuela)
-                                        <option value="{{ $escuela->id }}" data-facultad="{{ $escuela->facultad_id }}" hidden>
-                                            {{ $escuela->name }}
-                                        </option>
-                                    @endforeach
+                                </select>
+                            </div>
+                            <!-- Seccion -->
+                            <div class="col-md-4">
+                                <label for="seccion" class="form-label">Sección</label>
+                                <select class="form-control" id="seccion_registro" name="seccion" disabled>
+                                    <option value="">Seleccione una sección</option>
                                 </select>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -645,116 +701,103 @@
 @endsection
 
 @push('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if(session('success'))
 <script>
-    function toggleFacultadEscuela(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        
-        // Find the closest form and then find the role select within that form
-        const form = container.closest('form');
-        let rolSelect;
-        
-        // Handle both modals
-        if (form.id === 'formUsuarioMasivo') {
-            rolSelect = document.getElementById('rolMasivo');
-        } else if (form.id === 'formRegistro') {
-            rolSelect = document.getElementById('rolRegistro');
-        }
-        
-        if (!rolSelect) return;
-        
-        const selectedRole = parseInt(rolSelect.value);
-        
-        // Show/hide based on selected role (2 or 3)
-        /*if (selectedRole === 2) {
-            container.style.display = 'none';
-        } else {
-            container.style.display = 'block';
-        }*/
-    }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize both containers
-        toggleFacultadEscuela('facultadEscuelaContainerMasivo');
-        toggleFacultadEscuela('facultadEscuelaContainerRegistro');
-        
-        // Add event listeners for select changes
-        document.getElementById('rolMasivo')?.addEventListener('change', function() {
-            toggleFacultadEscuela('facultadEscuelaContainerMasivo');
-        });
-        
-        document.getElementById('rolRegistro')?.addEventListener('change', function() {
-            toggleFacultadEscuela('facultadEscuelaContainerRegistro');
-        });
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: '{{ session('success') }}',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
     });
 </script>
+@endif
+
 <script src="{{ asset('js/cuadro_registro_user.js') }}"></script>
-@endpush
-
-@push('js')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    // Filtro Facultad - Escuela - Seccion
+    function setupDependentSelects(facultadId, escuelaId, seccionId) {
+        const facultadSelect = document.getElementById(facultadId);
+        const escuelaSelect = document.getElementById(escuelaId);
+        const seccionSelect = document.getElementById(seccionId);
+        const semestreActivoId = {{ session('semestre_actual_id') ?? 'null' }};
 
-    /**
-     * Configura el filtrado dinámico de escuelas basado en la facultad seleccionada.
-     * @param {string} facultySelectId - El ID del <select> de facultades.
-     * @param {string} schoolSelectId - El ID del <select> de escuelas.
-     */
-    function setupDynamicSchools(facultySelectId, schoolSelectId) {
-        const facultySelect = document.getElementById(facultySelectId);
-        const schoolSelect = document.getElementById(schoolSelectId);
+        if (facultadSelect) {
+            facultadSelect.addEventListener('change', function () {
+                const selectedFacultadId = this.value;
+                // Reset dependants
+                escuelaSelect.innerHTML = '<option value="">Seleccione una escuela</option>';
+                seccionSelect.innerHTML = '<option value="">Seleccione una sección</option>';
 
-        if (!facultySelect || !schoolSelect) {
-            console.warn(`No se encontraron los selectores: ${facultySelectId} o ${schoolSelectId}`);
-            return;
+                escuelaSelect.disabled = true;
+                seccionSelect.disabled = true;
+                if (!selectedFacultadId) {
+                    return;
+                }
+
+                escuelaSelect.innerHTML = '<option value="">Cargando...</option>';
+                fetch(`/api/escuelas/${selectedFacultadId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let options = '<option value="">Seleccione una escuela</option>';
+                        data.forEach(e => {
+                            options += `<option value="${e.id}">${e.name}</option>`;
+                        });
+                        escuelaSelect.innerHTML = options;
+                        escuelaSelect.disabled = false;
+                    })
+                    .catch(() => {
+                        escuelaSelect.innerHTML = '<option value="">Error al cargar</option>';
+                    });
+            });
         }
 
-        facultySelect.addEventListener('change', function () {
-            const selectedFacultyId = this.value;
-            const schoolOptions = schoolSelect.options;
+        if (escuelaSelect) {
+            escuelaSelect.addEventListener('change', function () {
+                const selectedEscuelaId = this.value;
+                seccionSelect.innerHTML = '<option value="">Seleccione una sección</option>';
+                seccionSelect.disabled = true;
 
-            // Resetea y deshabilita el selector de escuelas
-            schoolSelect.value = '';
-            schoolSelect.disabled = true;
-
-            if (selectedFacultyId) {
-                let hasVisibleSchools = false;
-                // Itera sobre las opciones de escuela para mostrarlas/ocultarlas
-                for (let i = 0; i < schoolOptions.length; i++) {
-                    const option = schoolOptions[i];
-                    if (option.value === '') continue; // No tocar el placeholder
-
-                    if (option.getAttribute('data-facultad') === selectedFacultyId) {
-                        option.hidden = false;
-                        hasVisibleSchools = true;
-                    } else {
-                        option.hidden = true;
-                    }
+                if (!selectedEscuelaId || !semestreActivoId) {
+                    return;
                 }
-                // Habilita el selector de escuelas solo si hay opciones disponibles
-                if (hasVisibleSchools) {
-                    schoolSelect.disabled = false;
-                }
-            }
-        });
+
+                seccionSelect.innerHTML = '<option value="">Cargando...</option>';
+                fetch(`/api/secciones/${selectedEscuelaId}/${semestreActivoId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let options = '<option value="">Seleccione una sección</option>';
+                        data.forEach(d => {
+                            options += `<option value="${d.id}">${d.name}</option>`;
+                        });
+                        seccionSelect.innerHTML = options;
+                        seccionSelect.disabled = false;
+                    })
+                    .catch(() => {
+                        seccionSelect.innerHTML = '<option value="">Error al cargar</option>';
+                    });
+            });
+        }
     }
 
-    // Aplicar la lógica a ambos modales
-    setupDynamicSchools('facultadRegistro', 'escuelaRegistro'); // Para el modal de registro individual
-    setupDynamicSchools('facultadMasiva', 'escuelaMasiva');   // Para el modal de carga masiva
-    
-
-});
+    document.addEventListener("DOMContentLoaded", function () {
+        // Inicializar para el modal de registro individual
+        setupDependentSelects('facultad_registro', 'escuela_registro', 'seccion_registro');
+        // Inicializar para el modal de carga masiva
+        setupDependentSelects('facultad_masivo', 'escuela_masivo', 'seccion_masivo');
+    });
 
     const ELEMENTS = {
         form: document.getElementById('formRegistro'),
-        searchType: document.getElementById('searchType'),
         searchValue: document.getElementById('searchValue'),
+        rolRegistro: document.getElementById('rolRegistro'),
         btnVerify: document.getElementById('btnVerify'),
         searchResult: document.getElementById('searchResult'),
         personalDataContainer: document.getElementById('personalDataContainer'),
-        btnSubmit: document.querySelector('#modalRegistro .modal-footer button[type="submit"]'), // Obtener el botón de submit
+        btnSubmit: document.querySelector('#modalRegistro button[type="submit"]'),
         
         // Campos del formulario
         inputPersonaId: document.getElementById('personaId'), 
@@ -764,9 +807,8 @@ document.addEventListener('DOMContentLoaded', function () {
         inputApellidos: document.getElementById('apellidos'),
         
         // Campos de Asignación
-        rolRegistro: document.getElementById('rolRegistro'),
-        facultadRegistro: document.getElementById('facultadRegistro'),
-        escuelaRegistro: document.getElementById('escuelaRegistro'),
+        //facultadRegistro: document.getElementById('facultad'),
+        //escuelaRegistro: document.getElementById('escuela'),
         
         // Lista de todos los campos de datos personales (excepto los de búsqueda)
         personalInputs: [
@@ -775,179 +817,178 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('nombres'),
             document.getElementById('apellidos'),
             document.getElementById('celular'),
-            document.getElementById('correo_inst'),
+            document.getElementById('correo_inst'), // Este es el campo correcto
             document.getElementById('sexo'),
             document.getElementById('provincia'),
             document.getElementById('distrito'),
         ]
     };
 
-    /**
-     * Establece el estado (habilitado/deshabilitado) y el valor de los campos de datos personales.
-     * @param {boolean} disabled - Si los campos deben estar deshabilitados (true) o habilitados (false).
-     * @param {object} persona - Objeto con los datos de la persona si existe, o null si es nuevo.
-     */
-    function setPersonalDataState(disabled, persona = null) {
+    function showNewUserForm(fullEmail) {
+        ELEMENTS.searchResult.innerHTML = `<div class="alert alert-success"><i class="bi bi-check-circle-fill me-2"></i>No se encontró usuario. Complete los datos para crearlo.</div>`;
+        ELEMENTS.personalDataContainer.style.display = 'block';
+        ELEMENTS.form.classList.remove('form-state-existing');
+        ELEMENTS.form.classList.add('form-state-new');
+
         ELEMENTS.personalInputs.forEach(input => {
-            // Habilitar/Deshabilitar todos los campos
-            input.disabled = disabled;
-            
-            // Manejar el atributo 'required'
-            if (disabled) {
-                input.removeAttribute('required');
-            } else if (input.id !== 'provincia' && input.id !== 'distrito') {
-                // Re-establecer required solo para campos obligatorios si son nuevos
-                input.setAttribute('required', 'required');
-            }
-            
-            // Rellenar valores si la persona existe
-            if (persona) {
-                // Usamos input.name ya que coincide con las claves del objeto persona
-                input.value = persona[input.name] || ''; 
-                if (input.tagName === 'SELECT' && persona[input.name]) {
-                    input.value = persona[input.name];
-                }
-            } else {
-                // Limpiar valores para nuevo registro, excepto los rellenados por verifyUser
-                if (input.id !== 'dni' && input.id !== 'codigo') {
-                    input.value = '';
-                }
+            input.disabled = false;
+            input.readOnly = false;
+            if (input.id !== 'correo_inst' && input.id !== 'codigo') {
+                 input.value = '';
             }
         });
 
-        // Los campos de Asignación se habilitan solo si el proceso está listo para un submit
-        ELEMENTS.rolRegistro.disabled = false;
-        ELEMENTS.facultadRegistro.disabled = false;
-        ELEMENTS.escuelaRegistro.disabled = true; // Se habilita con la lógica de escuelas
+        ELEMENTS.inputPersonaId.value = '';
+        ELEMENTS.inputCodigo.value = ELEMENTS.searchValue.value;
+        ELEMENTS.inputCodigo.readOnly = true;
+        ELEMENTS.personalInputs.find(i => i.id === 'correo_inst').value = fullEmail;
+        ELEMENTS.personalInputs.find(i => i.id === 'correo_inst').readOnly = true;
+        
+        //ELEMENTS.facultadRegistro.disabled = false;
+        //ELEMENTS.escuelaRegistro.disabled = true;
+        ELEMENTS.btnSubmit.disabled = false;
+        ELEMENTS.inputNombres.focus();
     }
 
-    /**
-     * Resetea el formulario a su estado inicial.
-     */
+    function showExistingUserForm(persona, isAssigned) {
+        const message = isAssigned 
+            ? `<div class="alert alert-danger"><i class="bi bi-x-circle-fill me-2"></i>Usuario encontrado, pero <strong>YA ESTÁ ASIGNADO</strong> a este semestre.</div>`
+            : `<div class="alert alert-info"><i class="bi bi-info-circle-fill me-2"></i>Usuario encontrado: <strong>${persona.nombres} ${persona.apellidos}</strong>. Proceda a la Asignación.</div>`;
+        
+        ELEMENTS.searchResult.innerHTML = message;
+        ELEMENTS.personalDataContainer.style.display = 'block';
+        ELEMENTS.form.classList.remove('form-state-new');
+        ELEMENTS.form.classList.add('form-state-existing');
+
+        ELEMENTS.personalInputs.forEach(input => {
+            input.disabled = true;
+            input.value = persona[input.name] || '';
+        });
+
+        ELEMENTS.inputPersonaId.value = persona.id;
+        ELEMENTS.facultadRegistro.disabled = isAssigned;
+        ELEMENTS.escuelaRegistro.disabled = true;
+        ELEMENTS.btnSubmit.disabled = isAssigned;
+    }
+
     function resetForm() {
+        ELEMENTS.form.reset();
+        ELEMENTS.form.classList.remove('form-state-new', 'form-state-existing');
         ELEMENTS.searchResult.innerHTML = '';
         ELEMENTS.personalDataContainer.style.display = 'none';
-        ELEMENTS.inputPersonaId.value = '';
         ELEMENTS.btnSubmit.disabled = true;
-        ELEMENTS.rolRegistro.disabled = true;
-        ELEMENTS.facultadRegistro.disabled = true;
-        ELEMENTS.escuelaRegistro.disabled = true;
+        ELEMENTS.rolRegistro.disabled = false;
+        ELEMENTS.facultad.disabled = false;
+        ELEMENTS.escuela.disabled = false;
+        ELEMENTS.inputPersonaId.value = '';
+        ELEMENTS.searchValue.disabled = false;
     }
 
     // Verificar usuario existente btnVerify
     function verifyUser() {
-        const searchType = ELEMENTS.searchType.value;
-        const searchValue = ELEMENTS.searchValue.value.trim();
+        const searchValue = ELEMENTS.searchValue.value.trim().toLowerCase();
+        const rolId = ELEMENTS.rolRegistro.value;
         
-        if (!searchValue) {
-            ELEMENTS.searchResult.innerHTML = `<div class="alert alert-warning">Ingrese un valor de ${searchType.toUpperCase()} para buscar.</div>`;
-            resetForm();
+        
+        if (!rolId || !searchValue) {
+            ELEMENTS.searchResult.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Debe seleccionar un rol e ingresar el correo para verificar.</div>`;
             return;
         }
 
-        // Limpia resultados previos y prepara el botón
-        ELEMENTS.searchResult.innerHTML = '';
-        ELEMENTS.personalDataContainer.style.display = 'none';
         ELEMENTS.btnVerify.disabled = true;
         ELEMENTS.btnVerify.classList.add('loading');
-        ELEMENTS.btnSubmit.disabled = true;
-        
-        // Limpia el ID de persona anterior
-        ELEMENTS.inputPersonaId.value = '';
 
-        // Obtener el token CSRF del meta tag (asumiendo que está en el layout principal)
+        // Limpiamos solo el resultado anterior antes de una nueva búsqueda.
+        ELEMENTS.searchResult.innerHTML = '';
+        // Guardar el rol seleccionado en el campo oculto del formulario
+        document.getElementById('rolHidden').value = ELEMENTS.rolRegistro.value;
+
+        const fullEmail = `${searchValue}@unjfsc.edu.pe`;
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        // Fetch a la ruta de verificación
         fetch('{{ route('personas.verificar') }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify({
-                type: searchType,
-                value: searchValue,
-                semestre_id: document.querySelector('input[name="id_semestre"]').value
-            })
+            body: JSON.stringify({ correo_inst: fullEmail, semestre_id: '{{ $id_semestre }}' })
         }).then(response => {
-            ELEMENTS.btnVerify.disabled = false;
-            ELEMENTS.btnVerify.classList.remove('loading');
             if (!response.ok) throw new Error('Error de red o servidor.');
             return response.json();
         })
         .then(data => {
-            
             if (data.found) {
-                // ----------------------------------------------------
-                // A. USUARIO ENCONTRADO
-                // ----------------------------------------------------
-                
-                // 1. Verificar si ya fue asignado
-                if (data.already_assigned) {
-                    ELEMENTS.searchResult.innerHTML = `<div class="alert alert-danger">
-                        <i class="bi bi-x-circle-fill me-2"></i>
-                        Usuario encontrado, pero **YA ESTÁ ASIGNADO** a este semestre.
-                    </div>`;
-                    // Deshabilitar submit y mantener campos en solo lectura
-                    setPersonalDataState(true, data.persona); 
-                    ELEMENTS.btnSubmit.disabled = true;
-                } else {
-                    ELEMENTS.searchResult.innerHTML = `<div class="alert alert-info">
-                        <i class="bi bi-info-circle-fill me-2"></i>
-                        Usuario encontrado: <strong>${data.persona.nombres} ${data.persona.apellidos}</strong>. 
-                        Proceda a la Asignación (Paso 3).
-                    </div>`;
-
-                    // Cargar datos y deshabilitar todos los campos personales
-                    setPersonalDataState(true, data.persona);
-
-                    // Guardar el ID de la persona encontrada
-                    ELEMENTS.inputPersonaId.value = data.persona.id;
-                    ELEMENTS.btnSubmit.disabled = false;
-                }
-
-
+                resetForm(); // Limpiamos el formulario antes de mostrar los datos existentes.
+                showExistingUserForm(data.persona, data.already_assigned);
             } else {
-                // ----------------------------------------------------
-                // B. NUEVO USUARIO
-                // ----------------------------------------------------
-                ELEMENTS.searchResult.innerHTML = `<div class="alert alert-success">
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                    No se encontró usuario. Complete los datos personales y asigne el rol.
-                </div>`;
-
-                setPersonalDataState(false, null);
-
-                if (searchType === 'dni') {
-                    ELEMENTS.inputDni.value = searchValue; 
-                    //ELEMENTS.inputDni.disabled = true;
-                    ELEMENTS.inputDni.readOnly = true;
-                    ELEMENTS.inputCodigo.focus();          
-                } else {
-                    ELEMENTS.inputCodigo.value = searchValue; 
-                    //ELEMENTS.inputCodigo.disabled = true;  
-                    ELEMENTS.inputCodigo.readOnly = true;
-                    ELEMENTS.inputDni.focus();             
-                }
+                //resetForm(); // Limpiamos el formulario antes de mostrar los campos para un nuevo usuario.
                 
-                ELEMENTS.inputPersonaId.value = '';
-                ELEMENTS.btnSubmit.disabled = false;
+                showNewUserForm(fullEmail);
             }
-
-            // Mostrar sección de datos personales y asignación
-            ELEMENTS.personalDataContainer.style.display = 'block';
         })
         .catch(error => {
+            alert('Error al verificar usuario:' + error);
             console.error('Error al verificar usuario:', error);
+            ELEMENTS.searchResult.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Ocurrió un error al verificar.</div>`;
+        }).finally(() => {
             ELEMENTS.btnVerify.disabled = false;
             ELEMENTS.btnVerify.classList.remove('loading');
-            ELEMENTS.searchResult.innerHTML = `<div class="alert alert-danger">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                Ocurrió un error al verificar el usuario.
-            </div>`;
-            ELEMENTS.btnSubmit.disabled = true;
         });
     }
-    </script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const rolSelect = document.getElementById('rolRegistro');
+        const searchInput = document.getElementById('searchValue');
+        const verifyButton = document.getElementById('btnVerify');
+        let isNewUserFormActive = false; // Flag para controlar si el form de nuevo usuario está activo
+        let previousRolValue = rolSelect.value;
+
+        // Función para actualizar el estado del formulario de nuevo usuario
+        window.setNewUserFormStatus = (isActive) => {
+            isNewUserFormActive = isActive;
+        };
+
+        // Guardar el valor anterior antes del cambio
+        rolSelect.addEventListener('focus', function() {
+            previousRolValue = this.value;
+        });
+    
+        function updateSearchInputRestrictions() {
+            const selectedValue = rolSelect.value;
+            const selectedOption = rolSelect.options[rolSelect.selectedIndex];
+            const isStudent = selectedOption.text.toLowerCase().includes('estudiante');
+
+            if (!selectedValue) {
+                searchInput.disabled = true;
+                verifyButton.disabled = true;
+                searchInput.placeholder = 'Seleccione un rol primero';
+                return;
+            }
+
+            searchInput.disabled = false;
+            verifyButton.disabled = false;
+            searchInput.value = '';
+
+            if (isStudent) {
+                searchInput.type = 'tel';
+                searchInput.placeholder = 'Ingrese solo el código de 10 dígitos';
+                searchInput.maxLength = 10;
+                searchInput.pattern = '[0-9]*';
+            } else {
+                searchInput.type = 'text';
+                searchInput.placeholder = 'ej: jperez';
+                searchInput.maxLength = 50;
+                searchInput.removeAttribute('pattern');
+            }
+            searchInput.focus();
+        }
+
+        rolSelect.addEventListener('change', function() {
+            updateSearchInputRestrictions();
+        });
+
+        updateSearchInputRestrictions();
+    });
+</script>
 @endpush

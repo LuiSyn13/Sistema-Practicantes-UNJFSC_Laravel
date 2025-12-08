@@ -36,7 +36,7 @@
 </div>
 
 @php
-    $etapa = $practicaData->estado;
+    $etapa = $practicaData->state;
 @endphp
 
 @if ($etapa == 1)
@@ -47,10 +47,12 @@
     @include('practicas.admin.desarrollo.desa_E3')
 @elseif ($etapa == 4)
     @include('practicas.admin.desarrollo.desa_E4')
+@elseif ($etapa >= 5)
+    @include('practicas.admin.desarrollo.desa_E5')
 @else
     <div class="alert alert-success text-center mt-4" role="alert">
-        <h4 class="alert-heading">¡Felicidades!</h4>
-        <p>Has completado el proceso de prácticas preprofesionales.</p>
+        <h4 class="alert-heading">Estado Desconocido</h4>
+        <p>Contacte al soporte técnico.</p>
     </div>
 @endif
 

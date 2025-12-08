@@ -9,26 +9,24 @@ use App\Models\JefeInmediato;
 use App\Models\Practica;
 use App\Models\Persona;
 use App\Models\Semestre;
+use App\Models\Archivo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class PracticaController extends Controller
 {
     public function lst_supervision(){
+        $user = Auth::user();
+        $ap = $user->persona->asignacion_persona;
         $personas = Persona::with([
-                'practica.empresa', 
-                'practica.jefeInmediato'
+                'asignacion_persona.practicas'
             ])
-            ->whereHas('asignacion_persona', function ($query) {
+            ->whereHas('asignacion_persona', function ($query) use ($ap) {
                 $query->where('id_rol', 5);
+                $query->where('id_sa', $ap->id_sa);
             })
             ->get();
-            /*->whereHas('rol', function ($query) {
-                $query->where('id', 4);
-            })
-            ->get();*/
-    
-            //dd($personas);
             
         return view('practicas.admin.supervision', compact('personas'));
     }
@@ -38,18 +36,50 @@ class PracticaController extends Controller
         return response()->json($practica);
     }
 
+    public function showTypeFile($type, $id){
+        $archivo = Practica::where('id', $id)->with('archivos')->get();
+        /*->whereHas('archivos', function ($query) {
+            $query->where('tipo', $type);
+        })->get();*/
+        return response()->json($archivo);
+    }
+
+    public function status($id) {
+        $practica = Practica::select('state', 'calificacion')->findOrFail($id);
+        return response()->json($practica);
+    }
+
+    public function calificar(Request $request) {
+        $request->validate([
+            'practica_id' => 'required|exists:practicas,id',
+            'calificacion' => 'required|numeric|min:0|max:20',
+        ]);
+
+        $practica = Practica::findOrFail($request->practica_id);
+        
+        $practica->update([
+            'calificacion' => $request->calificacion,
+            'state' => 5,
+            'estado_practica' => 'completo' 
+        ]);
+
+        return back()->with('success', 'Calificación registrada correctamente.');
+    }
+
     public function proceso(Request $request) {
         $id = $request->id;
         $nuevoEstado = $request->estado; // "aprobado" o "rechazado"
-        
+        Log::info('Id now: '.$id);
+        Log::info('Estado now: '.$nuevoEstado);
         $practica = Practica::findOrFail($id);
         
         // Verificar condiciones según el estado actual
         $cumpleCondiciones = false;
         
-        switch ($practica->estado) {
+        switch ($practica->state) {
             case 1:
                 $cumpleCondiciones = $practica->empresa()->exists() && $practica->jefeInmediato()->exists();
+                Log::info('AQUIII');
                 break;
             case 2:
                 if ($practica->tipo_practica == 'desarrollo') {
@@ -75,6 +105,8 @@ class PracticaController extends Controller
             default:
                 $cumpleCondiciones = false;
         }
+
+        //Log::info('Data cumple '.$cumpleCondiciones);
         
         if (!$cumpleCondiciones && $nuevoEstado === 'aprobado') {
             $mensajeError = 'No se puede aprobar: ';
@@ -83,29 +115,34 @@ class PracticaController extends Controller
             } else {
                 $mensajeError .= 'faltan documentos requeridos para este estado.';
             }
+            Log::info('ADFF: '.$mensajeError);
             return back()->with('error', $mensajeError);
-        }        
+        }
         
         if ($nuevoEstado === 'aprobado') {
-            $practica->estado += 1;
-            //$practica->estado_proceso = 'completo';
+            $practica->state += 1;
+            $practica->estado_practica = 'completo';
         } elseif ($nuevoEstado === 'rechazado') {
-            $practica->estado_proceso = 'rechazado';
+            $practica->estado_practica = 'rechazado';
             if ($request->test) {
-                $empresa = Empresa::where('practicas_id', $id)->first();
-                $empresa->update([
-                    'estado' => 2,
-                ]);
+                $empresa = Empresa::where('id_practica', $id)->first();
+                if ($empresa) {
+                    $empresa->update([
+                        'state' => 2,
+                    ]);
+                }
                 
-                $jefeInmediato = JefeInmediato::where('practicas_id', $id)->first();
-                $jefeInmediato->update([
-                    'estado' => 2,
-                ]);
+                $jefeInmediato = JefeInmediato::where('id_practica', $id)->first();
+                if ($jefeInmediato) {
+                    $jefeInmediato->update([
+                        'state' => 2,
+                    ]);
+                }
             }
         }
 
-        if($practica->estado === 5) {
-            $practica->estado_proceso = 'completo';
+        if($practica->state === 5) {
+            $practica->estado_practica = 'completo';
         }
         
         $practica->save();
@@ -115,6 +152,7 @@ class PracticaController extends Controller
 
     public function storeDesarrollo(Request $request){
         $user = Auth::user();
+        $ap = $user->persona->asignacion_persona;
         $ed = $request->ed;
         
         // Validación rápida
@@ -124,21 +162,17 @@ class PracticaController extends Controller
 
         if ($ed == 1) {
             Practica::create([
-                'estudiante_id' => $user->persona->id,
-                'estado_proceso' => 'en proceso',
+                'id_ap' => $ap->id,
+                'estado_practica' => 'En Proceso',
                 'tipo_practica' => 'desarrollo',
-                'estado' => 1,
-                'date_create' => now(),
-                'date_update' => now(),
+                'state' => 1
             ]);
         }elseif ($ed == 2) {
             Practica::create([
-                'estudiante_id' => $user->persona->id,
-                'estado_proceso' => 'en proceso',
+                'id_ap' => $ap->id,
+                'estado_practica' => 'En Proceso',
                 'tipo_practica' => 'convalidacion',
-                'estado' => 1,
-                'date_create' => now(),
-                'date_update' => now(),
+                'state' => 1
             ]);
         }
         return response()->json(['success' => true]);
@@ -150,8 +184,10 @@ class PracticaController extends Controller
             abort(403, 'Usuario no autorizado');
         }
 
+        $ap = $user->persona->asignacion_persona;
+
         $practicaData = Practica::with(['empresa', 'jefeInmediato'])
-        ->where('estudiante_id', $user->persona->id)
+        ->where('id_ap', $ap->id)
         ->where('tipo_practica', 'desarrollo')
         ->first();
 
@@ -201,21 +237,38 @@ class PracticaController extends Controller
 
     public function storeFut(Request $request){
         $request->validate([
-            'persona_id' => 'required|exists:personas,id',
+            'practica' => 'required|exists:practicas,id',
             'fut' => 'required|file|mimes:pdf|max:20480',
         ]);
 
-        $personaId = $request->persona_id;
-
-        // Guardar el archivo
-        $nombre = 'fut_' . $personaId . '_' . time() . '.pdf';
-        $ruta = $request->file('fut')->storeAs('futs', $nombre, 'public');
+        $id_p = $request->practica;
 
         // Buscar o crear la matrícula
-        $practica = Practica::findOrFail($personaId);
+        $practica = Practica::findOrFail($id_p);
+
+        // Guardar el archivo
+        $file = $request->file('fut');
+        $nombre = 'fut_' . $practica->id_ap . '_' . time() . '.pdf';
+        $ruta = $file->storeAs('futs', $nombre, 'public');
+        $rutaCompleta = 'storage/' . $ruta;
+
+        //$nombre = 'fut_' . $practica->id_ap . '_' . time() . '.pdf';
+        //$ruta = $request->file('fut')->storeAs('futs', $nombre, 'public');
+
+        
         $practica->update([
-            'ruta_fut' => 'storage/' . $ruta,
-            'estado_proceso' => 'en proceso',
+            'estado_practica' => 'en proceso',
+        ]);
+
+        Archivo::create([
+            'archivo_id' => $practica->id,
+            'archivo_type' => Practica::class,
+            'estado_archivo' => 'Enviado',
+            'tipo' => 'fut',
+            'ruta' => $rutaCompleta,
+            'comentario' => null,
+            'subido_por_user_id' => $practica->id_ap,
+            'state' => 1
         ]);
 
         return back()->with('success', 'Formulario de Trámite (FUT) subido correctamente.');
@@ -223,21 +276,34 @@ class PracticaController extends Controller
 
     public function storeCartaPresentacion(Request $request){
         $request->validate([
-            'persona_id' => 'required|exists:personas,id',
+            'practica' => 'required|exists:practicas,id',
             'carta_presentacion' => 'required|file|mimes:pdf|max:20480',
         ]);
 
-        $personaId = $request->persona_id;
-
-        // Guardar el archivo
-        $nombre = 'carta_presentacion_' . $personaId . '_' . time() . '.pdf';
-        $ruta = $request->file('carta_presentacion')->storeAs('cartas_presentacion', $nombre, 'public');
+        $id_p = $request->practica;
 
         // Buscar o crear la matrícula
-        $practica = Practica::findOrFail($personaId);
+        $practica = Practica::findOrFail($id_p);
+
+        // Guardar el archivo
+        $file = $request->file('carta_presentacion');
+        $nombre = 'carta_presentacion_' . $practica->id_ap . '_' . time() . '.pdf';
+        $ruta = $file->storeAs('carta_presentacion', $nombre, 'public');
+        $rutaCompleta = 'storage/' . $ruta;
+
         $practica->update([
-            'ruta_carta_presentacion' => 'storage/' . $ruta,
             'estado_proceso' => 'en proceso',
+        ]);
+
+        Archivo::create([
+            'archivo_id' => $practica->id,
+            'archivo_type' => Practica::class,
+            'estado_archivo' => 'Enviado',
+            'tipo' => 'carta_presentacion',
+            'ruta' => $rutaCompleta,
+            'comentario' => null,
+            'subido_por_user_id' => $practica->id_ap,
+            'state' => 1
         ]);
 
         return back()->with('success', 'Carta de Presentación subida correctamente.');
@@ -245,11 +311,11 @@ class PracticaController extends Controller
 
     public function storeCartaAceptacion(Request $request){
         $request->validate([
-            'persona_id' => 'required|exists:personas,id',
+            'practica' => 'required|exists:practicas,id',
             'carta_aceptacion' => 'required|file|mimes:pdf|max:20480',
         ]);
 
-        $personaId = $request->persona_id;
+        $id_p = $request->practica;
 
         // Guardar el archivo
         $nombre = 'carta_aceptacion_' . $personaId . '_' . time() . '.pdf';

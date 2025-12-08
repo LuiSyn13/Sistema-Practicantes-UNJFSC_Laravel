@@ -334,6 +334,7 @@
     }
 </style>
 
+@if($etapa == 1)
 <div class="supervision-e2-container fade-in">
     <div class="supervision-e2-card">
         <div class="supervision-e2-header">
@@ -352,9 +353,8 @@
                             <i class="bi bi-file-earmark-text document-icon"></i>
                             <div class="document-details">
                                 <h5>Informe Formulario (FUT)</h5>
-                                <a href="" target="_blank" class="btn-ver-pdf fut" id="btn-ruta-fut">
-                                    <i class="bi bi-file-pdf"></i>
-                                    Ver PDF
+                                <a href="#" class="btn-ver-pdf fut btn-review-doc" id="btnEtapa22" data-doctype="fut">
+                                    Visualizar
                                 </a>
                             </div>
                         </div>
@@ -368,9 +368,8 @@
                             <i class="bi bi-envelope document-icon"></i>
                             <div class="document-details">
                                 <h5>Carta de Presentación</h5>
-                                <a href="" target="_blank" class="btn-ver-pdf carta-presentacion" id="btn-ruta-carta-presentacion">
-                                    <i class="bi bi-file-pdf"></i>
-                                    Ver PDF
+                                <a href="#" class="btn-ver-pdf carta-presentacion btn-review-doc" id="btnEtapa32" data-doctype="carta_presentacion">
+                                    Visualizar
                                 </a>
                             </div>
                         </div>
@@ -384,10 +383,9 @@
                             <i class="bi bi-envelope-check document-icon"></i>
                             <div class="document-details">
                                 <h5>Carta de Aceptación</h5>
-                                <a href="" target="_blank" class="btn-ver-pdf carta-aceptacion" id="btn-ruta-carta-aceptacion-C2">
-                                    <i class="bi bi-file-pdf"></i>
-                                    Ver PDF
-                                </a>
+                                <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                                    data-type="carta_aceptacion"
+                                    data-bs-target="#archivoModal">Visualizar</button>
                             </div>
                         </div>
                     </div>
@@ -396,7 +394,7 @@
         </div>
         
         <div class="supervision-e2-footer">
-            <form id="formProcesoE2" class="form-etapa" action="{{ route('proceso') }}" method="POST" data-estado="2">
+            <!--<form id="formProcesoE2" class="form-etapa" action="{{ route('proceso') }}" method="POST" data-estado="2">
                 @csrf
                 <input type="hidden" name="id" id="idE2">
                 <div class="row align-items-end">
@@ -419,7 +417,176 @@
                         </div>
                     </div>
                 </div>
-            </form>
+            </form>-->
         </div>
     </div>
 </div>
+@elseif($etapa == 2)
+<div class="etapa-container fade-in">
+    <div class="etapa-card">
+        <div class="etapa-header">
+            <h5 class="etapa-title">
+                <i class="bi bi-building"></i>
+                Formulario de Revisión
+            </h5>
+        </div>
+        
+        <div class="etapa-body">
+            <form id="formProcesoE2" class="form-etapa" action="{{ route('actualizar.archivo') }}" method="POST" data-estado="2">
+                @csrf
+                <input type="hidden" name="ap_id" value="#">
+                <input type="hidden" name="id" id="id_file">
+                <div class="row align-items-end">
+                    <div class="col-md-12">                        
+                        <div class="d-flex flex-column">
+                            <label class="font-weight-bold"><i class="bi bi-paperclip"></i> Archivo enviado:</label>
+                            <div class="alert alert-light p-2 d-flex justify-content-between align-items-center border flex-grow-1">
+                                <span class="text-truncate"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Anexo_7_Estudiante.pdf</span>
+                                <span>Fecha: 2025-11-29</span>
+                                <span id="pending-estado" class="badge bg-success">Aprobado</span>
+                                <a href="#" id="pending-ruta" class="btn btn-sm btn-outline-primary flex-shrink-0 ms-2" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Ver</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 d-flex justify-content-between align-items-center">
+                        <div class="col-md-4 form-group mt-3">
+                            <label for="estado" class="font-weight-bold mt-2">
+                                <i class="bi bi-gear"></i> Estado del Documento
+                            </label>
+                            <select class="form-select" name="estado" required>
+                                <option value="" selected disabled>Seleccione un estado</option>
+                                <option value="Corregir">Corregir</option>
+                                <option value="Aprobado">Aprobado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="estado" class="font-weight-bold mt-2">
+                                    <i class="bi bi-check-circle"></i> Guardar Cambios
+                                </label>
+                                <button type="submit" form="formProcesoE2" class="btn-guardar-e2 w-100">
+                                    <i class="bi bi-check-circle"></i>
+                                    Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- linea horizontal -->
+                    <div class="col-md-12">
+                        <hr>
+                    </div>
+                    <div class="col-md-12">
+                        <!-- Historial de archivos -->
+                        <label for="historial-anexo7" class="font-weight-bold mt-2">
+                            <i class="bi bi-clock-history"></i> Historial de Archivos
+                        </label>
+                        <div id="historial-anexo7" class="mt-2">
+                            <div class="alert alert-light p-2 d-flex justify-content-between align-items-center border flex-grow-1">
+                                <span class="text-truncate"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Anexo_7_Estudiante.pdf</span>
+                                <span>Fecha: 2025-11-29</span>
+                                <span class="badge bg-success">Aprobado</span>
+                                <a href="#" class="btn btn-sm btn-outline-primary flex-shrink-0 ms-2" target="_blank"><i class="bi bi-box-arrow-up-right"></i> Ver</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="etapa-footer">
+            <div class="text-end">
+                <button type="button" class="btn-regresar btn-regresar-etapa1">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Regresar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@elseif($etapa == 3)
+<div class="jefe-container fade-in">
+    <div class="jefe-card">
+        <div class="jefe-header">
+            <h5 class="jefe-title">
+                <i class="bi bi-person-tie"></i>
+                Datos del Jefe Inmediato
+            </h5>
+        </div>
+        
+        <div class="jefe-body">
+            <div class="form-group">
+                <label for="name" class="form-label">Apellidos y Nombres</label>
+                <div class="data-field-jefe">
+                    <span id="modal-name-jefe"></span>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="dni" class="form-label">DNI</label>
+                        <div class="data-field-jefe">
+                            <span id="modal-dni-jefe"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="sitio_web" class="form-label">Sitio web (opcional)</label>
+                        <div class="data-field-jefe">
+                            <span id="modal-sitio_web-jefe"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="area" class="form-label">Área o Departamento</label>
+                        <div class="data-field-jefe">
+                            <span id="modal-area-jefe"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cargo" class="form-label">Cargo o Puesto</label>
+                        <div class="data-field-jefe">
+                            <span id="modal-cargo-jefe"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="telefono" class="form-label">Teléfono</label>
+                        <div class="data-field-jefe">
+                            <span id="modal-telefono-jefe"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Correo electrónico</label>
+                        <div class="data-field-jefe">
+                            <span id="modal-email-jefe"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="jefe-footer">
+            <div class="text-end">
+                <button type="button" class="btn-regresar-jefe btn-regresar-etapa2">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Regresar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif

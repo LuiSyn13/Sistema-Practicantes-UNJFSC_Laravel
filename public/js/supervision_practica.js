@@ -1,256 +1,323 @@
 
 document.addEventListener("DOMContentLoaded", function () {
-    const etapa1 = document.getElementById("etapa1");
-    const etapa2 = document.getElementById("etapa2");
-    const etapa3 = document.getElementById("etapa3");
+    // --- State Management ---
+    const state = {
+        currentPracticeId: null,
+        currentStage: 1
+    };
 
-    const btnEtapa2 = document.getElementById("btnEtapa2");
-    const btnEtapa3 = document.getElementById("btnEtapa3");
-
-    btnEtapa2?.addEventListener("click", () => {
-        etapa1.style.display = "none";
-        etapa2.style.display = "block";
-        etapa3.style.display = "none";
-    });
-
-    btnEtapa3?.addEventListener("click", () => {
-        etapa1.style.display = "none";
-        etapa2.style.display = "none";
-        etapa3.style.display = "block";
-    });
-
-    document.querySelectorAll(".btn-regresar-etapa1").forEach(btn => {
-        btn.addEventListener("click", () => {
-            etapa1.style.display = "block";
-            etapa2.style.display = "none";
-            etapa3.style.display = "none";
-        });
-    });
-
-    document.querySelectorAll(".btn-regresar-etapa2").forEach(btn => {
-        btn.addEventListener("click", () => {
-            etapa1.style.display = "block";
-            etapa2.style.display = "none";
-            etapa3.style.display = "none";
-        });
-    });
-
+    // --- Elements ---
     const modalProceso = document.getElementById('modalProceso');
+    const supervisionTabs = document.getElementById('supervisionTabs');
+    const supervisionTabContent = document.getElementById('supervisionTabContent');
+    const reviewFormContainer = document.getElementById('review-form-container');
+    const btnBackToList = document.getElementById('btn-back-to-list');
 
+    // --- Event Listeners ---
+
+    // 1. Modal Open - Load Data
     modalProceso.addEventListener('show.bs.modal', async function (event) {
         const button = event.relatedTarget;
         const idPractica = button.getAttribute('data-id_practica');
+        state.currentPracticeId = idPractica;
+
+        // Reset View
+        resetView();
+
+        // Reset Tabs to first one
+        const firstTab = document.querySelector('#supervisionTabs button[data-bs-target="#content-stage-1"]');
+        if (firstTab) {
+            const tab = new bootstrap.Tab(firstTab);
+            tab.show();
+        }
 
         try {
             const response = await fetch(`/practica/${idPractica}`);
             const data = await response.json();
 
-            // Mostrar estado
-            const estado = parseInt(data.estado) || 1;
-            actualizarBotones(estado);
-            actualizarFormularios(estado);
-            
-            // Actualizar los selects de estado con el estado_proceso correspondiente a cada etapa
-            const etapas = ['E1', 'E2', 'E3', 'E4'];
-            etapas.forEach(etapa => {
-                const selectId = `estado${etapa}`;
-                const selectEstado = document.getElementById(selectId);
-                if (selectEstado && data.estado_proceso) {
-                    // Si el estado_proceso es 'completo', mostrar 'Aprobado', de lo contrario usar el valor real
-                    selectEstado.value = data.estado_proceso === 'completo' ? 'aprobado' : data.estado_proceso;
-                    
-                    // Si el estado_proceso es 'completo', cambiar el texto de la opción seleccionada
-                    if (data.estado_proceso === 'completo') {
-                        const option = selectEstado.querySelector(`option[value="aprobado"]`);
-                        if (option) {
-                            option.textContent = 'Completo';
-                        }
-                    }
-                }
-            });
+            // Populate Modal Data (Company, Boss, etc.)
+            populateModalData(data);
 
-            // Mostrar sección según tipo práctica
-            const esDesarrollo = data.tipo_practica === 'desarrollo';
-            document.getElementById('seccion-desarrollo-E2').style.display = esDesarrollo ? 'block' : 'none';
-            document.getElementById('seccion-convalidacion-E2').style.display = esDesarrollo ? 'none' : 'block';
-            document.getElementById('seccion-desarrollo-E3').style.display = esDesarrollo ? 'block' : 'none';
-            document.getElementById('seccion-convalidacion-E3').style.display = esDesarrollo ? 'none' : 'block';
-
-            // IDs para formularios
-            ['idE1', 'idE2', 'idE3', 'idE4'].forEach(id => {
-                document.getElementById(id).value = data.id;
-            });
-
-            // Empresa
-            document.getElementById('modal-nombre-empresa').textContent = data.empresa?.nombre || '';
-            document.getElementById('modal-ruc-empresa').textContent = data.empresa?.ruc || '';
-            document.getElementById('modal-razon_social-empresa').textContent = data.empresa?.razon_social || '';
-            document.getElementById('modal-direccion-empresa').textContent = data.empresa?.direccion || '';
-            document.getElementById('modal-telefono-empresa').textContent = data.empresa?.telefono || '';
-            document.getElementById('modal-email-empresa').textContent = data.empresa?.correo || '';
-            document.getElementById('modal-sitio_web-empresa').textContent = data.empresa?.web || '';
-
-            // Jefe inmediato
-            document.getElementById('modal-name-jefe').textContent = data.jefe_inmediato?.nombres || '';
-            document.getElementById('modal-area-jefe').textContent = data.jefe_inmediato?.area || '';
-            document.getElementById('modal-cargo-jefe').textContent = data.jefe_inmediato?.cargo || '';
-            document.getElementById('modal-dni-jefe').textContent = data.jefe_inmediato?.dni || '';
-            document.getElementById('modal-sitio_web-jefe').textContent = data.jefe_inmediato?.web || '';
-            document.getElementById('modal-telefono-jefe').textContent = data.jefe_inmediato?.telefono || '';
-            document.getElementById('modal-email-jefe').textContent = data.jefe_inmediato?.correo || '';
-
-            // Rutas de archivos - Actualizar hrefs y deshabilitar botones si no hay ruta
-            const updateButton = (buttonId, filePath) => {
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    if (filePath) {
-                        button.href = filePath;
-                        button.removeAttribute('disabled');
-                        button.classList.remove('disabled');
-                        button.style.cursor = 'pointer';
-                        button.style.opacity = '1';
-                    } else {
-                        button.removeAttribute('href');
-                        button.setAttribute('disabled', 'disabled');
-                        button.classList.add('disabled');
-                        button.style.cursor = 'not-allowed';
-                        button.style.opacity = '0.6';
-                    }
-                }
-            };
-
-            // Actualizar todos los botones de documentos
-            updateButton('btn-ruta-fut', data.ruta_fut);
-            updateButton('btn-ruta-plan-actividades', data.ruta_plan_actividades);
-            updateButton('btn-ruta-informe-final', data.ruta_informe_final);
-            updateButton('btn-ruta-constancia-cumplimiento', data.ruta_constancia_cumplimiento);
-            updateButton('btn-ruta-carta-aceptacion-C2', data.ruta_carta_aceptacion);
-            updateButton('btn-ruta-carta-aceptacion-E3', data.ruta_carta_aceptacion);
-            updateButton('btn-ruta-carta-presentacion', data.ruta_carta_presentacion);
-            updateButton('btn-ruta-registro-actividades', data.ruta_registro_actividades);
-            updateButton('btn-ruta-control-mensual-actividades', data.ruta_control_actividades);
+            // Handle Stage Visibility/State
+            const estado = parseInt(data.state) || 1;
+            updateStageAccess(estado);
 
         } catch (error) {
             console.error('Error al obtener datos:', error);
         }
     });
 
-    // Mostrar primera etapa por defecto
-    modalProceso.addEventListener("show.bs.modal", () => {
-        document.querySelectorAll('.form-etapa').forEach(form => {
-            form.querySelectorAll('select, button, input').forEach(el => {
-                el.removeAttribute('disabled');
-                el.classList.remove('disabled');
-                el.style.opacity = '1';
+    // 2. Tab Change - Reset View (Hide Review Form if open)
+    if (supervisionTabs) {
+        const tabEl = document.querySelectorAll('button[data-bs-toggle="pill"]');
+        tabEl.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                // Hide review form when switching tabs
+                reviewFormContainer.style.display = 'none';
+                supervisionTabContent.style.display = 'block';
+
+                // Also reset internal E1/E2 navigation if needed
+                resetInternalNav();
             });
-            form.style.opacity = '1';
         });
-
-        document.getElementById("primeraetapa").style.display = "block";
-        document.getElementById("segundaetapa").style.display = "none";
-        document.getElementById("terceraetapa").style.display = "none";
-        document.getElementById("cuartaetapa").style.display = "none";
-    });
-});
-
-// Control de botones por etapa
-document.addEventListener("DOMContentLoaded", function () {
-    const botones = {
-        1: document.getElementById("btn1"),
-        2: document.getElementById("btn2"),
-        3: document.getElementById("btn3"),
-        4: document.getElementById("btn4")
-    };
-
-    const etapas = {
-        1: document.getElementById("primeraetapa"),
-        2: document.getElementById("segundaetapa"),
-        3: document.getElementById("terceraetapa"),
-        4: document.getElementById("cuartaetapa")
-    };
-
-    function ocultarTodo() {
-        Object.values(etapas).forEach(etapa => etapa.style.display = "none");
     }
 
-    function mostrarEtapa(n) {
-        ocultarTodo();
-        etapas[n].style.display = "block";
-        
-        // Actualizar todos los selects de etapas anteriores a la actual
-        for (let i = 1; i <= 4; i++) {
-            const selectId = `estadoE${i}`;
-            const selectEstado = document.getElementById(selectId);
-            if (selectEstado) {
-                if (i < n) {
-                    // Para etapas anteriores, forzar a mostrar 'Aprobado' y deshabilitar
-                    selectEstado.value = 'aprobado';
-                    const option = selectEstado.querySelector(`option[value="aprobado"]`);
-                    if (option) {
-                        option.textContent = 'Aprobado';
-                    }
-                    selectEstado.setAttribute('disabled', 'disabled');
-                } else if (i === n) {
-                    // Para la etapa actual, manejar según estado_proceso
-                    const selectedOption = selectEstado.options[selectEstado.selectedIndex];
-                    if (selectedOption) {
-                        selectedOption.textContent = selectedOption.value === 'aprobado' ? 'Aprobado' : 
-                                                  (selectedOption.value === 'completo' ? 'Completo' : selectedOption.textContent);
-                    }
-                }
+    // 3. Document Review Click (Delegated)
+    document.addEventListener('click', async function (e) {
+        if (e.target.closest('.btn-review-doc')) {
+            e.preventDefault();
+            const btn = e.target.closest('.btn-review-doc');
+            const docType = btn.getAttribute('data-doctype');
+
+            if (state.currentPracticeId && docType) {
+                await openReviewForm(state.currentPracticeId, docType);
             }
         }
+    });
+
+    // 4. Back Button in Review Form
+    if (btnBackToList) {
+        btnBackToList.addEventListener('click', function () {
+            reviewFormContainer.style.display = 'none';
+            supervisionTabContent.style.display = 'block';
+
+            // Add fade-in animation
+            supervisionTabContent.classList.add('fade-in');
+            setTimeout(() => supervisionTabContent.classList.remove('fade-in'), 500);
+        });
     }
 
-    Object.entries(botones).forEach(([num, btn]) => {
-        btn.addEventListener("click", () => mostrarEtapa(Number(num)));
+    // 5. Internal Navigation (Legacy E1/E2 buttons)
+    // Handle "Visualizar Empresa" (btnEtapa2 in E1)
+    const btnEtapa2 = document.getElementById('btnEtapa2');
+    if (btnEtapa2) {
+        btnEtapa2.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('etapa1-content').style.display = 'none';
+            document.getElementById('etapa1-empresa').style.display = 'block';
+        });
+    }
+
+    // Handle "Visualizar Jefe" (btnEtapa3 in E1)
+    const btnEtapa3 = document.getElementById('btnEtapa3');
+    if (btnEtapa3) {
+        btnEtapa3.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('etapa1-content').style.display = 'none';
+            document.getElementById('etapa1-jefe').style.display = 'block';
+        });
+    }
+
+    // Handle "Regresar" buttons in internal nav
+    document.querySelectorAll('.btn-regresar-etapa1').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('etapa1-content').style.display = 'block';
+            document.getElementById('etapa1-empresa').style.display = 'none';
+            document.getElementById('etapa1-jefe').style.display = 'none';
+        });
     });
-});
 
-function actualizarBotones(estadoActual) {
-    document.querySelectorAll('.btn-etapa').forEach(boton => {
-        const estadoBoton = parseInt(boton.getAttribute('data-estado')) || 1;
+    // --- Functions ---
 
-        if (estadoBoton <= estadoActual) {
-            boton.classList.remove('btn-secondary', 'btn-disabled');
-            boton.classList.add('btn-info');
-            boton.removeAttribute('disabled');
-            boton.style.opacity = '1';
-            boton.style.cursor = 'pointer';
-        } else {
-            boton.classList.remove('btn-info');
-            boton.classList.add('btn-secondary', 'btn-disabled');
-            boton.setAttribute('disabled', 'disabled');
-            boton.style.opacity = '0.6';
-            boton.style.cursor = 'not-allowed';
+    function resetView() {
+        reviewFormContainer.style.display = 'none';
+        supervisionTabContent.style.display = 'block';
+        resetInternalNav();
+    }
+
+    function resetInternalNav() {
+        // Reset E1 internal nav
+        const e1Content = document.getElementById('etapa1-content');
+        if (e1Content) {
+            e1Content.style.display = 'block';
+            document.getElementById('etapa1-empresa').style.display = 'none';
+            document.getElementById('etapa1-jefe').style.display = 'none';
         }
-    });
-}
+    }
 
-function actualizarFormularios(estadoActual) {
-    document.querySelectorAll('.form-etapa').forEach(formulario => {
-        const estadoFormulario = parseInt(formulario.getAttribute('data-estado')) || 1;
-        const elementos = formulario.querySelectorAll('select, button, input');
-        const isActive = estadoFormulario === estadoActual;
+    async function openReviewForm(practiceId, docType) {
+        try {
+            // Show loading state?
 
-        // Actualizar clases y atributos del formulario
-        formulario.classList.toggle('disabled', !isActive);
-        formulario.style.opacity = isActive ? '1' : '0.6';
+            const response = await fetch(`/api/documento/${practiceId}/${docType}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
 
-        // Actualizar elementos del formulario
-        elementos.forEach(el => {
-            if (isActive) {
-                el.removeAttribute('disabled');
-                el.classList.remove('disabled');
+            if (data && data.length > 0) {
+                const docData = data[0]; // Assuming the API returns an array
+
+                // Populate Form
+                document.getElementById('review_file_id').value = docData.id;
+                document.getElementById('review_file_name').textContent = docData.nombre_archivo || `${docType}.pdf`; // Fallback name
+                document.getElementById('review_file_date').textContent = `Fecha: ${docData.created_at || new Date().toLocaleDateString()}`;
+
+                // Status Badge
+                const badge = document.getElementById('review_file_status_badge');
+                badge.textContent = docData.estado_archivo || 'Pendiente';
+                badge.className = 'badge ' + (docData.estado_archivo === 'Aprobado' ? 'bg-success' : 'bg-secondary');
+
+                // Link
+                const link = document.getElementById('review_file_link');
+                link.href = docData.ruta;
+
+                // Title
+                document.getElementById('review-form-title').textContent = `Revisión de ${formatDocType(docType)}`;
+
+                // Switch View
+                supervisionTabContent.style.display = 'none';
+                reviewFormContainer.style.display = 'block';
+                reviewFormContainer.classList.add('fade-in');
             } else {
-                // Para los selects, solo deshabilitar pero mantener el valor visible
-                if (el.tagName === 'SELECT') {
-                    el.setAttribute('disabled', 'disabled');
+                // Handle no document found (maybe show a toast)
+                console.warn('No document found for this type');
+                // You might want to show an alert here
+            }
+
+        } catch (error) {
+            console.error('Error fetching document data:', error);
+        }
+    }
+
+    function formatDocType(type) {
+        // Helper to format "carta_presentacion" -> "Carta Presentación"
+        return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function populateModalData(data) {
+        // IDs para formularios globales de etapa
+        ['idE1', 'idE2', 'idE3', 'idE4', 'idE5'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = data.id;
+        });
+
+        // Empresa
+        document.getElementById('modal-nombre-empresa').textContent = data.empresa?.nombre || '';
+        document.getElementById('modal-ruc-empresa').textContent = data.empresa?.ruc || '';
+        document.getElementById('modal-razon_social-empresa').textContent = data.empresa?.razon_social || '';
+        document.getElementById('modal-direccion-empresa').textContent = data.empresa?.direccion || '';
+        document.getElementById('modal-telefono-empresa').textContent = data.empresa?.telefono || '';
+        document.getElementById('modal-email-empresa').textContent = data.empresa?.correo || '';
+        document.getElementById('modal-sitio_web-empresa').textContent = data.empresa?.web || '';
+
+        // Jefe inmediato
+        document.getElementById('modal-name-jefe').textContent = data.jefe_inmediato?.nombres || '';
+        document.getElementById('modal-area-jefe').textContent = data.jefe_inmediato?.area || '';
+        document.getElementById('modal-cargo-jefe').textContent = data.jefe_inmediato?.cargo || '';
+        document.getElementById('modal-dni-jefe').textContent = data.jefe_inmediato?.dni || '';
+        document.getElementById('modal-sitio_web-jefe').textContent = data.jefe_inmediato?.web || '';
+        document.getElementById('modal-telefono-jefe').textContent = data.jefe_inmediato?.telefono || '';
+        document.getElementById('modal-email-jefe').textContent = data.jefe_inmediato?.correo || '';
+
+        // Conditional Sections (Desarrollo vs Convalidación)
+        const esDesarrollo = data.tipo_practica === 'desarrollo';
+        toggleSection('seccion-desarrollo-E2', esDesarrollo);
+        toggleSection('seccion-convalidacion-E2', !esDesarrollo);
+        toggleSection('seccion-desarrollo-E3', esDesarrollo);
+        toggleSection('seccion-convalidacion-E3', !esDesarrollo);
+
+        // Calificación Final (Etapa 5)
+        const inputCalif = document.getElementById('calificacion-input');
+        const msgCalif = document.getElementById('msg-calificado');
+        const displayNota = document.getElementById('display-nota-final');
+        const btnSubmit = document.getElementById('btn-submit-calificacion');
+
+        if (inputCalif) {
+            if (data.calificacion !== null && data.calificacion !== undefined) {
+                inputCalif.value = data.calificacion;
+                // Opcional: Bloquear si ya está calificado para evitar cambios accidentales
+                // inputCalif.setAttribute('readonly', true);
+                // btnSubmit.disabled = true;
+
+                if (displayNota) displayNota.textContent = parseFloat(data.calificacion).toFixed(2);
+                if (msgCalif) msgCalif.classList.remove('d-none');
+            } else {
+                inputCalif.value = '';
+                inputCalif.removeAttribute('readonly');
+                if (btnSubmit) btnSubmit.disabled = false;
+                if (msgCalif) msgCalif.classList.add('d-none');
+            }
+        }
+    }
+
+    function toggleSection(id, show) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = show ? 'block' : 'none';
+    }
+
+    let globalMaxStage = 1;
+
+    function updateStepper(selectedStage) {
+        const items = document.querySelectorAll('.stepper-item');
+
+        items.forEach(item => {
+            const stage = parseInt(item.getAttribute('data-stage'));
+            const circle = item.querySelector('.stepper-circle');
+
+            // Reset classes
+            item.classList.remove('completed', 'current', 'locked');
+
+            if (stage < selectedStage) {
+                // Past relative to selection
+                item.classList.add('completed');
+                circle.innerHTML = '<i class="bi bi-check-lg"></i>';
+            } else if (stage === selectedStage) {
+                // Selected
+                item.classList.add('current');
+                circle.innerHTML = stage;
+            } else {
+                // Future relative to selection
+                if (stage <= globalMaxStage) {
+                    // Unlocked but future (show as completed style but with number, or just unlocked)
+                    // The user wants it to look like est_des.blade.php which uses 'completed' class but keeps the number
+                    item.classList.add('completed');
+                    circle.innerHTML = stage;
                 } else {
-                    el.setAttribute('disabled', 'disabled');
-                    el.classList.add('disabled');
+                    // Locked
+                    item.classList.add('locked');
+                    circle.innerHTML = '<i class="bi bi-lock-fill"></i>';
                 }
             }
+
+            // Click handlers
+            if (stage <= globalMaxStage) {
+                item.style.cursor = 'pointer';
+                item.onclick = () => switchTab(stage);
+            } else {
+                item.style.cursor = 'not-allowed';
+                item.onclick = null;
+            }
         });
-    });
-}
+    }
+
+    function switchTab(stage) {
+        // Manually switch tabs since the nav-pills are hidden/removed
+        const panes = document.querySelectorAll('.tab-pane');
+        panes.forEach(pane => {
+            pane.classList.remove('show', 'active');
+        });
+
+        const targetPane = document.getElementById(`content-stage-${stage}`);
+        if (targetPane) {
+            targetPane.classList.add('show', 'active');
+        }
+
+        // Also hide review form if open
+        const reviewFormContainer = document.getElementById('review-form-container');
+        const supervisionTabContent = document.getElementById('supervisionTabContent');
+        if (reviewFormContainer && supervisionTabContent) {
+            reviewFormContainer.style.display = 'none';
+            supervisionTabContent.style.display = 'block';
+        }
+
+        // Update visual stepper to reflect this selection
+        updateStepper(stage);
+    }
+
+    function updateStageAccess(estado) {
+        // Set global max stage based on data
+        globalMaxStage = Math.min(Math.max(parseInt(estado) || 1, 1), 5);
+
+        // Show the current stage (max stage) by default when opening
+        switchTab(globalMaxStage);
+    }
+});

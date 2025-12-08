@@ -685,6 +685,120 @@
 </style>
 @endpush
 
+@push('css')
+  <style>
+    .stepper {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 2rem 0;
+        position: relative;
+    }
+    /* Línea de progreso (fondo) */
+    .stepper::before {
+        content: '';
+        position: absolute;
+        top: 3.5rem; /* Ajustado al centro del círculo */
+        left: 0;
+        right: 0;
+        height: 4px;
+        background-color: #e9ecef;
+        z-index: 1;
+        border-radius: 10px;
+        transform: translateY(-50%);
+    }
+
+    .stepper-item {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        cursor: default;
+        transition: all 0.3s ease;
+    }
+
+    .stepper-item:not(.locked) {
+        cursor: pointer;
+    }
+
+    .stepper-circle {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 3px solid #e9ecef;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 700;
+        color: #adb5bd;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .stepper-label {
+        font-size: 0.8rem;
+        color: #adb5bd;
+        font-weight: 600;
+        text-align: center;
+        transition: color 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 0.5rem;
+    }
+
+    /* ESTADOS */
+        
+    /* Completado */
+    .stepper-item.completed .stepper-circle {
+        background-color: #198754;
+        border-color: #198754;
+        color: white;
+        box-shadow: 0 4px 6px rgba(25, 135, 84, 0.25);
+    }
+    .stepper-item.completed .stepper-label {
+        color: #198754;
+    }
+    
+    /* Actual - Diseño Elegante */
+    .stepper-item.current .stepper-circle {
+        background-color: #fff;
+        border-color: #0d6efd;
+        color: #0d6efd;
+        transform: scale(1.3);
+        box-shadow: 0 0 0 6px rgba(13, 110, 253, 0.15);
+        z-index: 11;
+    }
+    .stepper-item.current .stepper-label {
+        color: #0d6efd;
+        font-weight: 800;
+        margin-top: 1rem; /* Ajuste por el scale */
+    }
+
+    /* Bloqueado */
+    .stepper-item.locked .stepper-circle {
+        background-color: #f8f9fa;
+        border-color: #e9ecef;
+        color: #ced4da;
+    }
+    .stepper-item.locked .stepper-label {
+        color: #ced4da;
+    }
+    
+    /* Hover para items desbloqueados */
+    .stepper-item:not(.locked):not(.current):hover .stepper-circle {
+        border-color: #0d6efd;
+        color: #0d6efd;
+        transform: translateY(-3px);
+    }
+  </style>  
+@endpush
+
 @section('content')
 <div class="supervision-container">
     <div class="supervision-card fade-in">
@@ -708,11 +822,16 @@
                     </thead>
                     <tbody>
                         @foreach ($personas as $index => $persona)
+                            @php
+                                // 1. Usa optional() para manejar posibles valores null en asignacion_persona
+                                // 2. Usa last() para obtener el último MODELO de la colección 'practicas'
+                                $practica = optional($persona->asignacion_persona)->practicas->last();
+                            @endphp
                         <tr data-estudiante-id="{{ $persona->id }}">
                             <td class="align-middle text-center">{{ $index + 1 }}</td>
                             <td class="align-middle text-center">
-                                @if($persona->practica && $persona->practica->tipo_practica)
-                                    <span class="practice-badge">{{ $persona->practica->tipo_practica }}</span>
+                                @if($practica)
+                                    <span class="practice-badge">{{ $practica->tipo_practica }}</span>
                                 @else
                                     <span class="no-registered">Sin asignar</span>
                                 @endif
@@ -728,12 +847,13 @@
                                 @endif
                             </td>
                             <td class="align-middle text-center">
-                                @if($persona->practica)
+                                @if($practica)
                                 <button 
+                                    id="btnProceso"
                                     class="btn btn-info" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#modalProceso"
-                                    data-id_practica="{{ $persona->practica->id }}">
+                                    data-id_practica="{{ $practica->id }}">
                                     <i class="bi bi-list-check"></i>
                                     Ver
                                 </button>
@@ -773,81 +893,75 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Indicador de Progreso -->
-                <div class="progress-indicator">
-                    <div class="progress-step" id="step1">1</div>
-                    <div class="progress-step" id="step2">2</div>
-                    <div class="progress-step" id="step3">3</div>
-                    <div class="progress-step" id="step4">4</div>
-                </div>
-                
-                <!-- Botones de Etapas -->
-                <div class="etapas-container">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <button class="btn btn-etapa w-100" id="btn1" data-estado="1">
-                                    <i class="bi bi-1-circle"></i>
-                                    <div>Etapa 1</div>
-                                    <small>Inicio</small>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <button class="btn btn-etapa w-100" id="btn2" data-estado="2">
-                                    <i class="bi bi-2-circle"></i>
-                                    <div>Etapa 2</div>
-                                    <small>Desarrollo</small>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <button class="btn btn-etapa w-100" id="btn3" data-estado="3">
-                                    <i class="bi bi-3-circle"></i>
-                                    <div>Etapa 3</div>
-                                    <small>Seguimiento</small>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <button class="btn btn-etapa w-100" id="btn4" data-estado="4">
-                                    <i class="bi bi-4-circle"></i>
-                                    <div>Etapa 4</div>
-                                    <small>Finalización</small>
-                                </button>
-                            </div>
-                        </div>
+                <div id="stepper" class="stepper">
+                    <!-- Stepper Items (Generated/Updated by JS) -->
+                    <div class="stepper-item" data-stage="1">
+                        <div class="stepper-circle">1</div>
+                        <span class="stepper-label">Inicio</span>
+                    </div>
+                    <div class="stepper-item" data-stage="2">
+                        <div class="stepper-circle">2</div>
+                        <span class="stepper-label">Desarrollo</span>
+                    </div>
+                    <div class="stepper-item" data-stage="3">
+                        <div class="stepper-circle">3</div>
+                        <span class="stepper-label">Seguimiento</span>
+                    </div>
+                    <div class="stepper-item" data-stage="4">
+                        <div class="stepper-circle">4</div>
+                        <span class="stepper-label">Finalización</span>
+                    </div>
+                    <div class="stepper-item" data-stage="5">
+                        <div class="stepper-circle">5</div>
+                        <span class="stepper-label">Evaluación</span>
                     </div>
                 </div>
 
-                <!-- Contenido de Etapas -->
-                <div class="etapa-content">
-                    <div id="primeraetapa">
-                        <div id="etapa1">
+                <!-- Stage Content -->
+                <div class="tab-content" id="supervisionTabContent">
+                    <!-- Stage 1: Inicio -->
+                    <div class="tab-pane fade show active" id="content-stage-1" role="tabpanel">
+                        <div id="etapa1-content">
                             @include('practicas.admin.supervision.supe_E1', ['etapa' => 1])
                         </div>
-
-                        <div id="etapa2" style="display: none;">
+                        <!-- Containers for E1 internal navigation (Company/Boss details) -->
+                        <div id="etapa1-empresa" style="display: none;">
                             @include('practicas.admin.supervision.supe_E1', ['etapa' => 2])
                         </div>
-
-                        <div id="etapa3" style="display: none;">
+                        <div id="etapa1-jefe" style="display: none;">
                             @include('practicas.admin.supervision.supe_E1', ['etapa' => 3])
                         </div>
                     </div>
-                    <div id="segundaetapa" style="display: none;">
-                        @include('practicas.admin.supervision.supe_E2')
+
+                    <!-- Stage 2: Desarrollo -->
+                    <div class="tab-pane fade" id="content-stage-2" role="tabpanel">
+                        <div id="etapa2-content">
+                            @include('practicas.admin.supervision.supe_E2', ['etapa' => 1])
+                        </div>
+                        <!-- Internal nav for E2 (Boss details again? It was in the original file) -->
+                         <div id="etapa2-jefe" style="display: none;">
+                            @include('practicas.admin.supervision.supe_E2', ['etapa' => 3])
+                        </div>
                     </div>
-                    <div id="terceraetapa" style="display: none;">
+
+                    <!-- Stage 3: Seguimiento -->
+                    <div class="tab-pane fade" id="content-stage-3" role="tabpanel">
                         @include('practicas.admin.supervision.supe_E3')
                     </div>
-                    <div id="cuartaetapa" style="display: none;">
+
+                    <!-- Stage 4: Finalización -->
+                    <div class="tab-pane fade" id="content-stage-4" role="tabpanel">
                         @include('practicas.admin.supervision.supe_E4')
                     </div>
+
+                    <!-- Stage 5: Evaluación -->
+                    <div class="tab-pane fade" id="content-stage-5" role="tabpanel">
+                        @include('practicas.admin.supervision.supe_E5')
+                    </div>
                 </div>
+
+                <!-- Generic Review Form (Hidden by default, shown via JS) -->
+                @include('practicas.admin.supervision.review_form')
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -862,5 +976,6 @@
 @endsection
 
 @push('js')
+
 <script src="{{ asset('js/supervision_practica.js') }}"></script>
 @endpush

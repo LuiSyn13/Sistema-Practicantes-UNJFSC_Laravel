@@ -459,26 +459,6 @@
         transform: translateX(2px);
     }
 
-    /* Botones con tooltips */
-    .btn[data-toggle="modal"] {
-        position: relative;
-    }
-
-    .btn[data-toggle="modal"]:hover::after {
-        content: attr(title);
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--text-primary);
-        color: white;
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        z-index: 1000;
-    }
-
     /* Form controls con estados */
     .form-control:valid {
         border-color: var(--success-color);
@@ -510,12 +490,7 @@
         background-repeat: no-repeat;
         background-position: right 0.75rem center;
         background-size: 1rem 1rem;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { background-position-x: right 0.75rem; transform: rotate(0deg); }
-        100% { background-position-x: right 0.75rem; transform: rotate(360deg); }
+        animation: icon-spin 1s linear infinite;
     }
 
     /* Alert icons mejorados */
@@ -641,7 +616,7 @@
 
 @section('content')
 <div class="asignatura-container">
-
+    @php /*
     @if (session('success'))
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle-fill"></i>
@@ -660,7 +635,8 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-    @endif
+    @endif*/
+    @endphp
 
     <div class="asignatura-card fade-in">
         <div class="asignatura-card-header">
@@ -675,17 +651,24 @@
         </div>
         
         <div class="asignatura-card-body">
+            @if($ap->id_rol != 3)
+            <x-data-filter
+                route="docente"
+                :facultades="$facultades"
+            />
+            @endif
             <div class="table-container">
                 <div class="table-responsive">
                     <table class="table" id="dataTable" width="100%" cellspacing="0">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Docente</th>
-                                <th>Semestre</th>
+                                <th>Facultad</th>
                                 <th>Escuela</th>
+                                <th>Sección</th>
                                 <th>Nombre de grupo</th>
-                                <th>Estado</th>
+                                <th>Docente</th>
+                                <th>Supervisor</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -695,20 +678,19 @@
                                 <td>
                                     <span class="grupo-name">{{ $index + 1 }}</span>
                                 </td>
-                                <td class="docente-name">{{ $grupo->docente->nombres }} {{ $grupo->docente->apellidos }}</td>
                                 <td>
-                                    <span class="grupo-name">{{ $grupo->semestre->codigo }}</span>
+                                    <span class="grupo-name">{{ $grupo->seccion_academica->facultad->name }}</span>
                                 </td>
                                 <td>
-                                    <span class="grupo-name">{{ $grupo->escuela->name }}</span>
+                                    <span class="grupo-name">{{ $grupo->seccion_academica->escuela->name }}</span>
                                 </td>
-                                <td class="grupo-name">{{ $grupo->nombre_grupo }}</td>
                                 <td>
-                                    <span class="estado-badge {{ $grupo->estado == 'Activo' ? 'estado-activo' : 'estado-inactivo' }}">
-                                        
-                                        {{ $grupo->estado }}
-                                    </span>
+                                    <span class="grupo-name">{{ $grupo->seccion_academica->seccion }}</span>
                                 </td>
+                                <td class="grupo-name">{{ $grupo->name }}</td>
+                                <td class="docente-name">{{ $grupo->docente->persona->nombres }} {{ $grupo->docente->persona->apellidos }}</td>
+                                <td class="docente-name">{{ $grupo->supervisor->persona->nombres }} {{ $grupo->supervisor->persona->apellidos }}</td>
+                                
                                 <td>
                                     <!-- Editar -->
                                     <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalEditar{{ $grupo->id }}">
@@ -739,7 +721,7 @@
 
 <!-- Modales para editar y eliminar -->
 @foreach ($grupos_practica as $grupo)
-<!-- MODAL EDITAR -->
+<!-- MODAL EDITAR (Refactorizado) -->
 <div class="modal fade" id="modalEditar{{ $grupo->id }}" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -755,52 +737,44 @@
           </button>
         </div>
         <div class="modal-body">
-          <div class="form-group">
-            <label>
-              <i class="bi bi-person-badge"></i>
-              Docente
-            </label>
-            <select name="id_docente" class="form-control" required>
-              @foreach($docentes as $docente)
-                <option value="{{ $docente->id }}" {{ $docente->id == $grupo->id_docente ? 'selected' : '' }}>
-                  {{ $docente->nombres }} {{ $docente->apellidos }}
-                </option>
-              @endforeach
-            </select>
-          </div>
-          <div class="form-group">
-            <label>
-              <i class="bi bi-calendar3"></i>
-              Semestre
-            </label>
-            <select name="id_semestre" class="form-control" required>
-              @foreach($semestres as $semestre)
-                <option value="{{ $semestre->id }}" {{ $semestre->id == $grupo->id_semestre ? 'selected' : '' }}>
-                  {{ $semestre->codigo }}
-                </option>
-              @endforeach
-            </select>
-          </div>
-          <div class="form-group">
-            <label>
-              <i class="bi bi-building"></i>
-              Escuela
-            </label>
-            <select name="id_escuela" class="form-control" required>
-              @foreach($escuelas as $escuela)
-                <option value="{{ $escuela->id }}" {{ $escuela->id == $grupo->id_escuela ? 'selected' : '' }}>
-                  {{ $escuela->name }}
-                </option>
-              @endforeach
-            </select>
-          </div>
-          <div class="form-group">
-            <label>
-              <i class="bi bi-collection"></i>
-              Nombre del Grupo
-            </label>
-            <input type="text" name="nombre_grupo" value="{{ $grupo->nombre_grupo }}" class="form-control" required>
-          </div>
+            <div class="alert alert-info" role="alert" style="font-size: 0.85rem;">
+                <i class="bi bi-info-circle-fill"></i>
+                Solo se permite editar el <strong>nombre del grupo</strong> y el <strong>supervisor</strong>. Para cambios estructurales, se recomienda eliminar y crear un nuevo grupo.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label><i class="bi bi-building"></i> Escuela</label>
+                    <input type="text" class="form-control" value="{{ $grupo->seccion_academica->escuela->name }}" disabled>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label><i class="bi bi-diagram-3"></i> Sección</label>
+                    <input type="text" class="form-control" value="{{ $grupo->seccion_academica->seccion }}" disabled>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="bi bi-person-badge"></i> Docente Titular</label>
+                <input type="text" class="form-control" value="{{ $grupo->docente->persona->nombres }} {{ $grupo->docente->persona->apellidos }}" disabled>
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+                <label for="nombre_grupo_{{ $grupo->id }}">
+                    <i class="bi bi-collection"></i> Nombre del Grupo (Editable)
+                </label>
+                <input type="text" id="nombre_grupo_{{ $grupo->id }}" name="nombre_grupo" value="{{ $grupo->name }}" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="dsupervisor_{{ $grupo->id }}">
+                    <i class="bi bi-person-video3"></i> Supervisor (Editable)
+                </label>
+                <select name="dsupervisor" id="dsupervisor_{{ $grupo->id }}" class="form-control" required data-sa-id="{{ $grupo->id_sa }}" data-current-supervisor="{{ $grupo->id_supervisor }}">
+                    <option value="">Cargando supervisores...</option>
+                </select>
+            </div>
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">
@@ -857,7 +831,7 @@
 
 <!-- MODAL CREAR GRUPO -->
 <div class="modal fade" id="crearGrupoModal" tabindex="-1" aria-labelledby="crearGrupoLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <form action="{{ route('grupos.store') }}" method="POST">
         @csrf
@@ -870,65 +844,83 @@
         </div>
 
         <div class="modal-body">
-            <!-- Semestre -->
-            <div class="form-group">
-                <label for="id_semestre">
-                <i class="bi bi-calendar3"></i>
-                Semestre
-                </label>
-                <select name="id_semestre" class="form-control" required>
-                <option value="">Seleccione un semestre</option>
-                @foreach($semestres as $semestre)
-                    <option value="{{ $semestre->id }}">{{ $semestre->codigo }}</option>
-                @endforeach
-                </select>
-            </div>
             <!-- Facultad -->
           <div class="form-group">
-              <label for="facultad_id">
-                <i class="bi bi-bank"></i>
-                Facultad
-              </label>
-              <select id="facultad_id" class="form-control" required>
-                  <option value="">Seleccione una facultad</option>
-                  @foreach($facultades as $facultad)
-                      <option value="{{ $facultad->id }}">{{ $facultad->name }}</option>
-                  @endforeach
-              </select>
-          </div>
-
-          <!-- Escuela -->
-          <div class="form-group">
-              <label for="id_escuela">
-                <i class="bi bi-building"></i>
-                Escuela
-              </label>
-              <select name="id_escuela" id="id_escuela" class="form-control" required disabled>
-                  <option value="">Seleccione una escuela</option>
-                  @foreach($escuelas as $escuela)
-                      <option value="{{ $escuela->id }}" data-facultad="{{ $escuela->facultad_id }}" hidden>
-                          {{ $escuela->name }}
-                      </option>
-                  @endforeach
-              </select>
+              <div class="row g-3">
+                <!-- Facultad -->
+                <div class="col-md-4">
+                    <label for="crear-facultad" class="form-label">Facultad</label>
+                    <select class="form-control" id="crear-facultad" name="facultad" required>
+                        @if($ap->id_rol == 3)
+                            <option value="{{ $ap->seccion_academica->id_facultad }}" selected>{{ $ap->seccion_academica->facultad->name ?? 'N/A' }}</option>
+                        @else
+                        <option value="">Seleccione una facultad</option>
+                            @foreach($facultades as $facultad)
+                                @foreach($facultades as $fac)
+                                    <option value="{{ $fac->id }}">{{ $fac->name }}</option>
+                                @endforeach
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+                <!-- Escuela -->
+                <div class="col-md-4">
+                    <label for="crear-escuela" class="form-label">Escuela</label>
+                    @if ($ap->id_rol == 3)
+                        <select class="form-control" id="crear-escuela" name="escuela" required>
+                            <option value="{{ $ap->seccion_academica->id_escuela }}" selected>{{ $ap->seccion_academica->escuela->name ?? 'N/A' }}</option>
+                        </select>
+                    @else
+                        <select class="form-control" id="crear-escuela" name="escuela" required disabled>
+                            <option value="">Seleccione una escuela</option>
+                        </select>
+                    @endif
+                </div>
+                <!-- Seccion -->
+                <div class="col-md-4">
+                    <label for="crear-seccion" class="form-label"><i class="bi bi-person-badge"></i> Sección</label>
+                    @if ($ap->id_rol == 3)
+                        <select class="form-control" id="crear-seccion" name="seccion" required>
+                            <option value="{{ $ap->id_sa }}" selected>{{ $ap->seccion_academica->seccion ?? 'N/A' }}</option>
+                        </select>
+                    @else
+                        <select class="form-control" id="crear-seccion" name="seccion" disabled>
+                            <option value="">Seleccione una sección</option>
+                        </select>
+                    @endif
+                </div>
+            </div>
           </div>
           
           <!-- Docente -->
           <div class="form-group">
-            <label for="id_docente">
-              <i class="bi bi-person-badge"></i>
-              Docente
-            </label>
-            <select name="id_docente" class="form-control" required>
-              <option value="">Seleccione un docente</option>
-              @foreach($docentes as $docente)
-                <option value="{{ $docente->id }}">{{ $docente->nombres }} {{ $docente->apellidos }}</option>
-              @endforeach
-            </select>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="dtitular">
+                    <i class="bi bi-person-badge"></i>
+                    Docente
+                    </label>
+                    @if ($ap->id_rol == 3)
+                        <select class="form-control" id="dtitular" name="dtitular" required>
+                            <option value="{{ $ap->id }}" selected>{{ $ap->persona->nombres }} {{ $ap->persona->apellidos }}</option>
+                        </select>
+                    @else
+                        <select name="dtitular" id="dtitular" class="form-control" required disabled>
+                            <option value="">Seleccione un docente</option>
+                        </select>
+                    @endif
+                </div>
+                <div class="col-md-6">
+                    <label for="dsupervisor">
+                    <i class="bi bi-person-badge"></i>
+                    Supervisor
+                    </label>
+                    <select name="dsupervisor" id="dsupervisor" class="form-control" required disabled>
+                        <option value="">Seleccione un supervisor disponible</option>
+                    </select>
+                </div>
+            </div>
           </div>
-
-          
-
           <!-- Nombre del grupo -->
           <div class="form-group">
             <label for="nombre_grupo">
@@ -955,8 +947,158 @@
 </div>
 
 @endsection
+
 @push('js')
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if(session('success'))
 <script>
+Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: '{{ session('success') }}',
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true,
+});
+</script>
+@endif
+
+<script>
+    // Filtro Facultad - Escuela - Seccion
+    document.addEventListener("DOMContentLoaded", function () {
+        const facultadSelect = document.getElementById('crear-facultad');
+        const escuelaSelect = document.getElementById('crear-escuela');
+        const seccionSelect = document.getElementById('crear-seccion');
+        const dtitularSelect = document.getElementById('dtitular');
+        const dsupervisorSelect = document.querySelector('#crearGrupoModal #dsupervisor');
+        const currentUserRolId = {{ $ap->id_rol ?? 'null' }}; // Obtener el ID del rol del usuario actual
+        const semestreActivoId = {{ session('semestre_actual_id') ?? 'null' }};
+
+        facultadSelect.addEventListener('change', function () {
+            const facultadId = this.value;
+            // Reset dependants
+            escuelaSelect.innerHTML = '<option value="">Seleccione una escuela</option>';
+            seccionSelect.innerHTML = '<option value="">Seleccione una sección</option>';
+
+            dtitularSelect.innerHTML = '<option value="">Seleccione un docente</option>';
+            dsupervisorSelect.innerHTML = '<option value="">Seleccione un supervisor disponible</option>';
+            dtitularSelect.disabled = true;
+            dsupervisorSelect.disabled = true;
+            escuelaSelect.disabled = true;
+            seccionSelect.disabled = true;
+            if (!facultadId) {
+                return;
+            }
+
+            escuelaSelect.innerHTML = '<option value="">Cargando...</option>';
+            fetch(`/api/escuelas/${facultadId}`)
+                .then(res => res.json())
+                .then(data => {
+                    let options = '<option value="">Seleccione una escuela</option>';
+                    data.forEach(e => {
+                        options += `<option value="${e.id}">${e.name}</option>`;
+                    });
+                    escuelaSelect.innerHTML = options;
+                    escuelaSelect.disabled = false;
+                })
+                .catch(() => {
+                    escuelaSelect.innerHTML = '<option value="">Error al cargar</option>';
+                });
+        });
+
+        escuelaSelect.addEventListener('change', function () {
+            const escuelaId = this.value;
+            seccionSelect.innerHTML = '<option value="">Seleccione una sección</option>';
+            seccionSelect.disabled = true;
+
+            dtitularSelect.innerHTML = '<option value="">Seleccione un docente</option>';
+            dsupervisorSelect.innerHTML = '<option value="">Seleccione un supervisor disponible</option>';
+            dtitularSelect.disabled = true;
+            dsupervisorSelect.disabled = true;
+
+            if (!escuelaId || !semestreActivoId) {
+                return;
+            }
+
+            seccionSelect.innerHTML = '<option value="">Cargando...</option>';
+            fetch(`/api/secciones/${escuelaId}/${semestreActivoId}`) // <-- Usar semestre activo
+                .then(res => res.json())
+                .then(data => {
+                    let options = '<option value="">Seleccione una sección</option>';
+                    data.forEach(d => {
+                        options += `<option value="${d.id}">${d.name}</option>`;
+                    });
+                    seccionSelect.innerHTML = options;
+                    seccionSelect.disabled = false;
+                    console.log('Secciones cargadas ', data)
+                })
+                .catch(() => {
+                    seccionSelect.innerHTML = '<option value="">Error al cargar</option>';
+                });
+        });
+
+        // Función para cargar Docentes y Supervisores basada en la sección
+        function loadDocentesAndSupervisoresForSection(seccionId) {
+            // Cargar Supervisores
+            dsupervisorSelect.innerHTML = '<option value="">Cargando...</option>';
+            dsupervisorSelect.disabled = true;
+            const rol_dsupervisor = 4;
+            fetch(`/api/docentes/${rol_dsupervisor}/${seccionId}`)
+                .then(res => res.json())
+                .then(data => {
+                    let options = '<option value="">Seleccione un supervisor</option>';
+                    data.forEach(d => {
+                        options += `<option value="${d.people}">${d.nombres} ${d.apellidos}</option>`;
+                    });
+                    dsupervisorSelect.innerHTML = options;
+                    dsupervisorSelect.disabled = false;
+                })
+                .catch(() => {
+                    dsupervisorSelect.innerHTML = '<option value="">Error al cargar</option>';
+                });
+
+            // Cargar Docentes (solo si el usuario actual NO es rol 3, ya que está pre-llenado en Blade)
+            if (currentUserRolId !== 3) {
+                dtitularSelect.innerHTML = '<option value="">Cargando...</option>';
+                dtitularSelect.disabled = true;
+                const rol_dtitular = 3;
+                fetch(`/api/docentes/${rol_dtitular}/${seccionId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let options = '<option value="">Seleccione un docente</option>';
+                        data.forEach(d => {
+                            options += `<option value="${d.people}">${d.nombres} ${d.apellidos}</option>`;
+                        });
+                        dtitularSelect.innerHTML = options;
+                        dtitularSelect.disabled = false;
+                    })
+                    .catch((error) => {
+                        console.error('Error al cargar docentes ', error);
+                        dtitularSelect.innerHTML = '<option value="">Error al cargar</option>';
+                    });
+            } else {
+                // Si el usuario actual es rol 3, el docente titular ya está pre-seleccionado en Blade, solo aseguramos que esté habilitado.
+                dtitularSelect.disabled = false;
+            }
+        }
+
+        seccionSelect.addEventListener('change', function () {
+            const seccionId = this.value;
+            loadDocentesAndSupervisoresForSection(seccionId);
+        });
+
+        // Disparar la carga cuando el modal se abre, si la sección ya está pre-seleccionada (para rol 3)
+        $('#crearGrupoModal').on('show.bs.modal', function () {
+            if (currentUserRolId === 3) {
+                const preSelectedSeccionId = seccionSelect.value;
+                if (preSelectedSeccionId) {
+                    loadDocentesAndSupervisoresForSection(preSelectedSeccionId);
+                }
+            }
+        });
+    });
     document.addEventListener('DOMContentLoaded', function () {
         const facultadSelect = document.getElementById('facultad_id');
         const escuelaSelect = document.getElementById('id_escuela');
@@ -1060,6 +1202,43 @@
                     closeButton.click();
                 }
             }, 5000);
+        });
+    });
+
+    // Carga dinámica de supervisores en el modal de edición
+    document.addEventListener('DOMContentLoaded', function() {
+        $('.modal[id^="modalEditar"]').on('show.bs.modal', function (event) {
+            const modal = $(this);
+            const supervisorSelect = modal.find('select[name="dsupervisor"]');
+            const saId = supervisorSelect.data('sa-id');
+            const currentSupervisorId = supervisorSelect.data('current-supervisor');
+            const rolSupervisor = 4;
+
+            supervisorSelect.html('<option value="">Cargando...</option>').prop('disabled', true);
+
+            if (!saId) {
+                supervisorSelect.html('<option value="">Error: No se encontró la sección</option>');
+                return;
+            }
+
+            fetch(`/api/docentes/${rolSupervisor}/${saId}`)
+                .then(res => res.json())
+                .then(data => {
+                    let options = '<option value="">Seleccione un supervisor</option>';
+                    if (data.length === 0) {
+                        options = '<option value="">No hay supervisores disponibles</option>';
+                    } else {
+                        data.forEach(d => {
+                            const isSelected = d.people == currentSupervisorId ? 'selected' : '';
+                            options += `<option value="${d.people}" ${isSelected}>${d.nombres} ${d.apellidos}</option>`;
+                        });
+                    }
+                    supervisorSelect.html(options).prop('disabled', false);
+                })
+                .catch(error => {
+                    console.error('Error al cargar supervisores:', error);
+                    supervisorSelect.html('<option value="">Error al cargar</option>');
+                });
         });
     });
 </script>

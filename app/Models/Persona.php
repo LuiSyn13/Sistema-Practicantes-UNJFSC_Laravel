@@ -24,9 +24,7 @@ class Persona extends Model
         'provincia',
         'distrito',
         'usuario_id',
-        'date_create',
-        'date_update',
-        'estado'
+        'state'
     ];
 
     public function user()
@@ -39,7 +37,7 @@ class Persona extends Model
         return $this->hasOne(asignacion_persona::class, 'id_persona');
     }
 
-    public function matricula()
+    /*public function matricula()
     {
         return $this->hasOne(Matricula::class);
     }
@@ -51,7 +49,7 @@ class Persona extends Model
     public function practica()
     {
         return $this->hasOne(Practica::class, 'estudiante_id','id');
-    }
+    }*/
     public function gruposComoDocente()
     {
         return $this->hasMany(grupos_practica::class, 'id_docente');

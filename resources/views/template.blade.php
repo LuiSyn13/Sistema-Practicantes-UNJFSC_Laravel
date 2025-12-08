@@ -276,7 +276,7 @@
         display: flex;
         flex-direction: column;
         background-color: var(--background-color);
-
+    }
     /* Header Superior */
     .topbar {
         background: var(--surface-color);

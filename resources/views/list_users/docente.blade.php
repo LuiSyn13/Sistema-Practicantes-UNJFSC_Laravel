@@ -722,22 +722,22 @@
                 <i class="bi bi-mortarboard"></i>
                 Lista de Docentes
             </h5>
-            <button type="button" class="btn btn-primary mb-3 p-4" data-bs-toggle="modal" data-bs-target="#modalAgregarDocente">
-                <i class="bi bi-plus-circle"></i> Añadir Docente
-            </button>
         </div>
         <div class="docentes-card-body">
-            <x-filter/>
+            <x-data-filter
+                route="docente"
+                :facultades="$facultades"
+            />
             <div class="table-container">
                 <table class="table" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Código</th>
+                            <th>Email</th>
                             <th>Apellidos y Nombres</th>
-                            <th>DNI</th>
-                            <th>Correo</th>
-                            <th>Celular</th>
+                            <th>Facultad</th>
+                            <th>Escuela</th>
+                            <th>Sección</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -747,17 +747,13 @@
                             <td>{{ $index + 1 }}</td>
                             <td>
                                 <span class="badge badge-light" style="background: var(--background-color); color: var(--text-primary); font-weight: 500;">
-                                    {{ $persona->codigo }}
+                                    {{ $persona->correo_inst }}
                                 </span>
                             </td>
                             <td>{{ strtoupper($persona->apellidos . ' ' . $persona->nombres) }}</td>
-                            <td>{{ $persona->dni }}</td>
-                            <td>
-                                <a href="mailto:{{ $persona->correo_inst }}" class="text-decoration-none">
-                                    {{ $persona->correo_inst }}
-                                </a>
-                            </td>
-                            <td>{{ $persona->celular }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->facultad->name }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->escuela->name }}</td>
+                            <td>{{ $persona->asignacion_persona->seccion_academica->seccion}}</td>
                             <td>
                                 <button type="button" class="btn btn-info" 
                                 data-toggle="modal" data-target="#modalEditar{{ $persona->id }}" 
@@ -787,230 +783,6 @@
                         @endif
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Agregar Docente -->
-<div class="modal fade" id="modalAgregarDocente" tabindex="-1" role="dialog" aria-labelledby="modalAgregarDocenteLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalAgregarDocenteLabel">
-                    <i class="bi bi-person-plus me-2"></i>
-                    Registro de Nuevo Docente
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="formAgregarDocente" action="#" method="POST">
-                    {{-- El action se configurará después --}}
-                    @csrf
-                    <input type="hidden" name="rol" value="3"> {{-- Asumiendo que 3 es el ID para Docente --}}
-                    <input type="hidden" name="semestre" value="{{ session('semestre_actual_id') }}">
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_codigo">Código</label>
-                                <input type="tel" class="form-control" id="add_codigo" name="codigo" maxlength="10" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_dni">DNI</label>
-                                <input type="tel" class="form-control" id="add_dni" name="dni" required maxlength="8" pattern="\d{1,9}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_celular">Celular</label>
-                                <input type="tel" class="form-control" id="add_celular" name="celular" required maxlength="9" pattern="\d{1,9}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_nombres">Nombres</label>
-                                <input type="text" class="form-control" id="add_nombres" name="nombres" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_apellidos">Apellidos</label>
-                                <input type="text" class="form-control" id="add_apellidos" name="apellidos" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="form-group">
-                                <label for="add_correo_inst">Correo Institucional</label>
-                                <input type="email" class="form-control" id="add_correo_inst" name="correo_inst" placeholder="Se autocompletará" required disabled>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_sexo">Género</label>
-                                <select class="form-control" id="add_sexo" name="sexo" required>
-                                    <option value="">Seleccione</option>
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Femenino</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_facultad">Facultad</label>
-                                <select class="form-control" id="add_facultad" name="facultad" required>
-                                    <option value="">Seleccione una facultad</option>
-                                    @foreach($facultades as $facultad)
-                                        <option value="{{ $facultad->id }}">{{ $facultad->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_escuela">Escuela</label>
-                                <select class="form-control" id="add_escuela" name="escuela" required disabled>
-                                    <option value="">Seleccione una escuela</option>
-                                    @foreach($escuelas as $escuela)
-                                        <option value="{{ $escuela->id }}" data-facultad="{{ $escuela->facultad_id }}" hidden>
-                                            {{ $escuela->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="bi bi-x-circle me-2"></i>Cerrar
-                </button>
-                <button type="submit" form="formAgregarDocente" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Registrar Docente
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Agregar Docente -->
-<div class="modal fade" id="modalAgregarDocente" tabindex="-1" role="dialog" aria-labelledby="modalAgregarDocenteLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalAgregarDocenteLabel">
-                    <i class="bi bi-person-plus me-2"></i>
-                    Registro de Nuevo Docente
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="formAgregarDocente" action="#" method="POST">
-                    {{-- El action se configurará después --}}
-                    @csrf
-                    <input type="hidden" name="rol" value="3"> {{-- Asumiendo que 3 es el ID para Docente --}}
-                    <input type="hidden" name="semestre" value="{{ session('semestre_actual_id') }}">
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_codigo">Código</label>
-                                <input type="tel" class="form-control" id="add_codigo" name="codigo" maxlength="10" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_dni">DNI</label>
-                                <input type="tel" class="form-control" id="add_dni" name="dni" required maxlength="8" pattern="\d{1,9}">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_celular">Celular</label>
-                                <input type="tel" class="form-control" id="add_celular" name="celular" required maxlength="9" pattern="\d{1,9}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_nombres">Nombres</label>
-                                <input type="text" class="form-control" id="add_nombres" name="nombres" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_apellidos">Apellidos</label>
-                                <input type="text" class="form-control" id="add_apellidos" name="apellidos" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="form-group">
-                                <label for="add_correo_inst">Correo Institucional</label>
-                                <input type="email" class="form-control" id="add_correo_inst" name="correo_inst" placeholder="Se autocompletará" required disabled>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="add_sexo">Género</label>
-                                <select class="form-control" id="add_sexo" name="sexo" required>
-                                    <option value="">Seleccione</option>
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Femenino</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_facultad">Facultad</label>
-                                <select class="form-control" id="add_facultad" name="facultad" required>
-                                    <option value="">Seleccione una facultad</option>
-                                    @foreach($facultades as $facultad)
-                                        <option value="{{ $facultad->id }}">{{ $facultad->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="add_escuela">Escuela</label>
-                                <select class="form-control" id="add_escuela" name="escuela" required disabled>
-                                    <option value="">Seleccione una escuela</option>
-                                    @foreach($escuelas as $escuela)
-                                        <option value="{{ $escuela->id }}" data-facultad="{{ $escuela->facultad_id }}" hidden>
-                                            {{ $escuela->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">
-                    <i class="bi bi-x-circle me-2"></i>Cerrar
-                </button>
-                <button type="submit" form="formAgregarDocente" class="btn btn-primary">
-                    <i class="bi bi-check-circle me-2"></i>Registrar Docente
-                </button>
             </div>
         </div>
     </div>

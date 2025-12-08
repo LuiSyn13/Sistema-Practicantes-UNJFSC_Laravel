@@ -17,29 +17,10 @@
                 </div>
                 <h5 class="text-primary font-weight-bold text-uppercase mb-3">Constancia de Cumplimiento</h5>
                 <div id="constanciaCumplimientoStatus">
-                    @if($practicaData->ruta_constancia_cumplimiento != null)
-                        @if ($practicaData->estado_proceso === 'en proceso' || $practicaData->estado_proceso === 'rechazado')
-                            <p class="text-muted mb-3">Visualiza o edita tu constancia de cumplimiento</p>
-                            <div class="d-flex flex-column gap-2 align-items-center">
-                                <a href="{{ asset($practicaData->ruta_constancia_cumplimiento) }}" target="_blank" class="btn btn-warning btn-sm">
-                                    <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                                </a>
-                                <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalConstanciaCumplimiento">
-                                    <i class="bi bi-pencil-square me-1"></i> Editar Documento
-                                </button>
-                            </div>
-                        @elseif ($practicaData->estado_proceso === 'completo')
-                            <p class="text-muted mb-3">Visualiza tu constancia de cumplimiento aprobada</p>
-                            <a href="{{ asset($practicaData->ruta_constancia_cumplimiento) }}" target="_blank" class="btn btn-warning btn-sm">
-                                <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                            </a>
-                        @endif
-                    @else
-                        <p class="text-muted mb-3">Sube la constancia firmada por la empresa</p>
-                        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalConstanciaCumplimiento">
-                            <i class="bi bi-cloud-upload me-1"></i> Subir Documento
-                        </button>
-                    @endif
+                    <span id="status-file-plan" class="status-badge status-completed">Completo</span>
+                    <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                        data-type="constancia_cumplimiento"
+                        data-bs-target="#archivoModal">Visualizar</button>
                 </div>
             </div>
         </div>
@@ -52,29 +33,10 @@
                 </div>
                 <h5 class="text-primary font-weight-bold text-uppercase mb-3">Informe Final de PPP</h5>
                 <div id="informeFinalStatus">
-                    @if($practicaData->ruta_informe_final != null)
-                        @if ($practicaData->estado_proceso === 'en proceso' || $practicaData->estado_proceso === 'rechazado')
-                            <p class="text-muted mb-3">Visualiza o edita tu informe final</p>
-                            <div class="d-flex flex-column gap-2 align-items-center">
-                                <a href="{{ asset($practicaData->ruta_informe_final) }}" target="_blank" class="btn btn-warning btn-sm">
-                                    <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                                </a>
-                                <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#modalInformeFinalPPP">
-                                    <i class="bi bi-pencil-square me-1"></i> Editar Documento
-                                </button>
-                            </div>
-                        @elseif ($practicaData->estado_proceso === 'completo')
-                            <p class="text-muted mb-3">Visualiza tu informe final aprobado</p>
-                            <a href="{{ asset($practicaData->ruta_informe_final) }}" target="_blank" class="btn btn-warning btn-sm">
-                                <i class="bi bi-file-pdf me-1"></i> Ver PDF
-                            </a>
-                        @endif
-                    @else
-                        <p class="text-muted mb-3">Sube tu informe final detallado de prácticas</p>
-                        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalInformeFinalPPP">
-                            <i class="bi bi-cloud-upload me-1"></i> Subir Documento
-                        </button>
-                    @endif
+                    <span id="status-file-plan" class="status-badge status-completed">Completo</span>
+                    <button class="btn btn-primary-custom btn-sm btn-view-archivo"
+                        data-type="informe_final_ppp"
+                        data-bs-target="#archivoModal">Visualizar</button>
                 </div>
             </div>
         </div>

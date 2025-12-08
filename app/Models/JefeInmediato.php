@@ -15,12 +15,12 @@ class JefeInmediato extends Model
         'correo',
         'telefono',
         'web',
-        'practicas_id',
-        'estado'
+        'id_practica',
+        'state'
     ];
 
     public function practica()
     {
-        return $this->belongsTo(Practica::class, 'practicas_id','id');
+        return $this->belongsTo(Practica::class, 'id_practica');
     }
 }

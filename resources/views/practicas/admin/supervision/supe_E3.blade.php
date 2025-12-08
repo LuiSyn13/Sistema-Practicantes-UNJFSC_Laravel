@@ -412,7 +412,7 @@
                                 <i class="bi bi-envelope-check document-icon-e3"></i>
                                 <div class="document-details-e3">
                                     <h5>Carta de Aceptación</h5>
-                                    <a href="" target="_blank" class="btn-ver-pdf-e3 carta-aceptacion-e3" id="btn-ruta-carta-aceptacion-E3">
+                                    <a href="#" class="btn-ver-pdf-e3 carta-aceptacion-e3 btn-review-doc" id="btn-ruta-carta-aceptacion-E3" data-doctype="carta_aceptacion">
                                         <i class="bi bi-file-pdf"></i>
                                         Ver PDF
                                     </a>
@@ -426,7 +426,7 @@
                                 <i class="bi bi-calendar-check document-icon-e3"></i>
                                 <div class="document-details-e3">
                                     <h5>Plan de Actividades de las PPP</h5>
-                                    <a href="" target="_blank" class="btn-ver-pdf-e3 plan-actividades" id="btn-ruta-plan-actividades">
+                                    <a href="#" class="btn-ver-pdf-e3 plan-actividades btn-review-doc" id="btn-ruta-plan-actividades" data-doctype="plan_actividades_ppp">
                                         <i class="bi bi-file-pdf"></i>
                                         Ver PDF
                                     </a>
@@ -446,7 +446,7 @@
                                 <i class="bi bi-journal-text document-icon-e3"></i>
                                 <div class="document-details-e3">
                                     <h5>Registro de Actividades</h5>
-                                    <a href="" target="_blank" class="btn-ver-pdf-e3 registro-actividades" id="btn-ruta-registro-actividades">
+                                    <a href="#" class="btn-ver-pdf-e3 registro-actividades btn-review-doc" id="btn-ruta-registro-actividades" data-doctype="registro_actividades">
                                         <i class="bi bi-file-pdf"></i>
                                         Ver PDF
                                     </a>
@@ -460,7 +460,7 @@
                                 <i class="bi bi-graph-up document-icon-e3"></i>
                                 <div class="document-details-e3">
                                     <h5>Control Mensual de Actividades</h5>
-                                    <a href="" target="_blank" class="btn-ver-pdf-e3 control-mensual" id="btn-ruta-control-mensual-actividades">
+                                    <a href="#" class="btn-ver-pdf-e3 control-mensual btn-review-doc" id="btn-ruta-control-mensual-actividades" data-doctype="control_actividades">
                                         <i class="bi bi-file-pdf"></i>
                                         Ver PDF
                                     </a>

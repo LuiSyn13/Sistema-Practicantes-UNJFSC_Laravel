@@ -18,7 +18,7 @@ class Archivo extends Model
         'comentario',
         'subido_por_user_id',
         'revisado_por_user_id',
-        'estado'
+        'state'
     ];
 
     public function archivos() {

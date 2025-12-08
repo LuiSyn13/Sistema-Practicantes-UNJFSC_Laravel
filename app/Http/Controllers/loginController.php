@@ -29,7 +29,7 @@ class loginController extends Controller
         $asignacion = asignacion_persona::where('id_persona', $persona->id)->first();
         
         // saber el semestre actual y comprobar si el usuario tiene asignacion en el semestre actual
-        $semestre_actual = semestre::where('es_actual', 1)->first();
+        $semestre_actual = semestre::where('state', 1)->first();
 
         if ($asignacion && $asignacion->id_semestre != $semestre_actual->id) {
             Auth::logout();
@@ -42,7 +42,7 @@ class loginController extends Controller
         }
         
         $tipoUsuario = $asignacion->id_rol;
-        $estado = $asignacion->estado;
+        $estado = $asignacion->state;
 
 
         // en la session guardar el id del semestre actual
@@ -60,15 +60,9 @@ class loginController extends Controller
                 return redirect()->route('admin.Dashboard');
             case 2: // Sub Admin
                 return redirect()->route('panel');
-            case 3: // Docente Titular
-                if ($estado == 2) {
-                    return redirect()->route('acreditar.dtitular');
-                }
+            case 3:
                 return redirect()->route('dashboard.docente');
             case 4: // Docente Supervisor
-                if ($estado == 2) {
-                    return redirect()->route('acreditar.dsupervisor');
-                }
                 return redirect()->route('supervisor.Dashboard');
             case 5: // Estudiante
                 return redirect()->route('panel.estudiantes');

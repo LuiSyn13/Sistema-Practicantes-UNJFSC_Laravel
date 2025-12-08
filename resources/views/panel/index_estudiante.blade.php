@@ -121,13 +121,28 @@
 
 @section('content')
     @php
-        $user = auth()->user();
-        $persona = $user->persona;
-        $nombreCompleto = $persona->nombres . ' ' . $persona->apellidos;
-        $escuelaNombre = $escuela ? $escuela->name : 'Desconocida';
-        $practicas = auth()->user()->persona->practica;
+        $nombreCompleto = $ap->persona->nombres . ' ' . $ap->persona->apellidos;
+
         $hasPractice = $practicas && $practicas->tipo_practica !== null;
         $practiceType = $practicas->tipo_practica ?? null;
+
+
+        $archivosPorTipo = $matricula->archivos->groupBy('tipo');
+
+        $getLatest = function ($tipo) use ($archivosPorTipo) {
+            $history = $archivosPorTipo->get($tipo);
+            // Si existe, lo ordenamos y tomamos el primero (el más nuevo)
+            return $history ? $history->sortByDesc('created_at')->first() : null; 
+        };
+
+        $latestFicha = $getLatest('ficha');
+        $estadoFicha = $latestFicha ? $latestFicha->estado_archivo : 'Falta';
+        $msjFicha = ($estadoFicha === 'Corregir') ? $latestFicha->comentario : null;
+
+        $latestRecord = $getLatest('record');
+        $estadoRecord = $latestRecord ? $latestRecord->estado_archivo : 'Falta';
+        $msjRecord = ($estadoRecord === 'Corregir') ? $latestRecord->comentario : null;
+
     @endphp
     <!-- Main Content -->
     <div class="container-fluid main-content" id="mainContentView">
@@ -136,7 +151,7 @@
             <div class="welcome-header">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h1 class="h3 mb-2">Bienvenido(a), {{ $nombreCompleto }}</h1>
+                        <h1 class="h3 mb-2">Bienvenido(a), {{$nombreCompleto}}</h1>
                         <p class="mb-0 opacity-90">Aquí encontrarás toda la información y herramientas para gestionar tus prácticas pre-profesionales</p>
                     </div>
                     <div class="col-md-4 text-md-end">
@@ -161,12 +176,12 @@
                                 <i class="bi bi-person-fill" style="font-size: 55px; color: var(--primary-blue);"></i>
                             @endif
                             <h6 class="mb-1 mt-4">{{ $nombreCompleto }}</h6>
-                            <p class="text-muted small">Estudiante de {{ $escuelaNombre }}</p>
+                            <p class="text-muted small">Estudiante de {{ $ap->seccion_academica->escuela->name }}</p>
                         </div>
 
                         <div class="info-item">
                             <div class="info-label">Correo Institucional</div>
-                            <div class="info-value">{{ $persona->correo_inst }}</div>
+                            <div class="info-value">{{ $ap->persona->correo_inst }}</div>
                         </div>
 
                         <div class="info-item">
@@ -175,7 +190,7 @@
                         </div>
                         <div class="info-item">
                             <div class="info-label">Codigo Institucional</div>
-                            <div class="info-value">{{ $persona->codigo }}</div>
+                            <div class="info-value">{{ $ap->persona->codigo }}</div>
                         </div>
                     </div>
                 </div>
@@ -191,11 +206,11 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="fw-semibold">Estado de Inscripción</span>
-                                @if(isset($persona?->matricula) && ($persona->matricula->ruta_ficha || $persona->matricula->ruta_record))
-                                    @if ($persona?->matricula->estado_ficha == 'Completo' && $persona?->matricula->estado_record == 'Completo')
+                                @if(isset($matricula) /*&& ($persona->matricula->ruta_ficha || $persona->matricula->ruta_record)*/)
+                                    @if ($matricula->estado_matricula == 'Completo')
                                         <span class="status-badge status-completed">Completo</span>
                                         <span class="text-success">✓</span>
-                                    @elseif ($persona?->matricula->estado_ficha == 'en proceso' || $persona?->matricula->estado_record == 'en proceso')
+                                    @elseif ($matricula->estado_matricula == 'Pendiente')
                                         <span class="status-badge status-active">En Proceso</span>
                                     @endif
                                 @else
@@ -216,7 +231,7 @@
 
                         <div class="info-item">
                             <div class="info-label">Escuela Porfesional</div>
-                            <div class="info-value">{{ $escuelaNombre }}</div>
+                            <div class="info-value">{{ $ap->seccion_academica->escuela->name }}</div>
                         </div>
 
                         <div class="info-item">
@@ -238,11 +253,11 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <span class="fw-semibold">Estado Actual</span>
-                                @if(isset($persona?->practica))
-                                    @if ($persona?->practica->estado == 5)
+                                @if(isset($practicas))
+                                    @if ($practicas->state == 5)
                                         <span class="status-badge status-completed">Completo</span>
                                         <span class="text-success">✓</span>
-                                    @elseif ($persona?->practica->estado_proceso == 'en proceso' || $persona?->practica->estado_proceso == 'rechazado')
+                                    @elseif ($practicas->estado_practica == 'en proceso' || $practicas->estado_practica == 'rechazado')
                                         <span class="status-badge status-active">En Proceso</span>
                                     @endif
                                 @else
@@ -253,12 +268,12 @@
 
                         <div class="info-item">
                             <div class="info-label">Empresa</div>
-                            <div class="info-value">{{ $persona->practica->empresa->nombre ?? 'No Asignada' }}</div>
+                            <div class="info-value">{{ $practicas->empresa->nombre ?? 'No Asignada' }}</div>
                         </div>
 
                         <div class="info-item">
                             <div class="info-label">Jefe Inmediato</div>
-                            <div class="info-value">{{ $persona->practica->jefeInmediato->nombres ?? 'No Asignado' }}</div>
+                            <div class="info-value">{{ $practicas->jefeInmediato->nombres ?? 'No Asignado' }}</div>
                         </div>
 
                         <div class="info-item">
@@ -279,7 +294,7 @@
     <!-- Modal Matricula -->
     @include('matricula.view_estu_mat')
     <!-- Modal Prácticas -->
-    @if(isset($persona->matricula) && ($persona->matricula->estado_ficha == 'Completo' && $persona->matricula->estado_record == 'Completo'))
+    @if(isset($matricula) /*&& ($persona->matricula->estado_ficha == 'Completo' && $persona->matricula->estado_record == 'Completo')*/)
         @include('practicas.estudiante.practica')
     @else
         <div class="d-flex justify-content-center align-items-center my-5">
